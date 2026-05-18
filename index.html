@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <!-- add favicon img/favicon.png -->
+     <link rel="icon" type="image/png" href="img/favicon.png">
+    
+    <meta charset="UTF-8">
+    <!-- API bağlantısını hızlandırmak için preconnect ekleniyor -->
+    <link rel="preconnect" href="https://date.nager.at">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tatil Mi? - Bugün Okul Tatil mi?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    },
+                    animation: {
+                        fadeInUp: 'fadeInUp 0.6s ease-out forwards',
+                        pulseSlow: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    }
+                }
+            }
+        }
+        // Sayfa yüklenirken gözü almaması için (FOUC) tema ön kontrolü
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-teal-50 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950 text-slate-800 dark:text-slate-100 antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-500 dark:from-teal-400 dark:to-emerald-400 tracking-tight drop-shadow-sm">Tatil Mi?</a>
+            <div class="flex items-center gap-4">
+                <div class="text-sm font-medium text-slate-500 dark:text-slate-400 hidden sm:block" id="current-date-display"></div>
+                <button id="theme-toggle" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 focus:outline-none transition-colors">
+                    <!-- Açık Tema (Güneş İkonu) -->
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    <!-- Koyu Tema (Ay İkonu) -->
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-5xl mx-auto w-full px-6 py-10 space-y-16">
+        
+        <!-- Hero Section -->
+        <section class="text-center bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-all duration-300 opacity-0 animate-fadeInUp hover:shadow-md">
+            <!-- Banner Image -->
+            <div class="w-full h-40 sm:h-56 relative">
+                <img src="img/banner.jpg" alt="Tatil Banner" class="w-full h-full object-cover opacity-90" onerror="this.onerror=null; this.src='img/banner.png';">
+                <div class="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-800 to-transparent"></div>
+            </div>
+            
+            <!-- Hero Content -->
+            <div class="px-6 sm:px-12 pb-12 pt-4 relative z-10">
+                <h1 class="text-3xl md:text-5xl font-extrabold text-slate-800 dark:text-slate-100 mb-6 tracking-tight">
+                    Bugün Okul Tatil mi?
+                </h1>
+            
+            <!-- Status Indicator -->
+            <div id="status-indicator" class="text-6xl md:text-7xl font-black mb-8 transition-colors duration-300">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Countdown Timer -->
+            <div class="inline-block bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-6 md:px-10 transition-all duration-300 group hover:border-teal-300 dark:hover:border-teal-700 hover:shadow-lg hover:shadow-teal-500/10">
+                <p id="next-holiday-label" class="text-sm md:text-base text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-2">
+                    En Yakın Tatile Kalan Süre
+                </p>
+                <div id="countdown" class="text-xl md:text-2xl text-slate-700 dark:text-slate-200 font-medium">
+                    <!-- Injected via JS -->
+                    Hesaplanıyor...
+                </div>
+            </div>
+            </div>
+        </section>
+
+        <!-- Holiday Schedule Section -->
+        <section class="opacity-0 animate-fadeInUp" style="animation-delay: 200ms;">
+            <div class="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">Tatil Takvimi</h2>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2">Güncel eğitim öğretim yılı ve resmi tatiller.</p>
+                </div>
+                <label class="inline-flex items-center cursor-pointer group">
+                    <input type="checkbox" id="filter-past-toggle" class="sr-only peer">
+                    <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-gradient-to-r peer-checked:from-teal-500 peer-checked:to-emerald-500 group-hover:shadow-md"></div>
+                    <span class="ms-3 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors group-hover:text-teal-600 dark:group-hover:text-teal-400">Geçmiş Tatilleri Gizle</span>
+                </label>
+            </div>
+            
+            <div id="holiday-schedule" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="max-w-3xl mx-auto w-full pb-10 opacity-0 animate-fadeInUp" style="animation-delay: 400ms;">
+            <div class="mb-8 text-center">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">Sıkça Sorulan Sorular</h2>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- FAQ 1 -->
+                <details class="group bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+                    <summary class="flex justify-between items-center font-semibold cursor-pointer p-5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <span>Hafta sonu kursları tatil mi?</span>
+                        <span class="transition-transform duration-300 group-open:rotate-180 text-slate-400">
+                            <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="text-slate-600 dark:text-slate-300 p-5 pt-0 text-sm md:text-base leading-relaxed">
+                        Resmi tatillerde, ara tatillerde ve sömestr gibi büyük tatillerde genellikle Destekleme ve Yetiştirme Kursları (DYK) da tatil edilmektedir. Ancak kar tatili gibi anlık olağanüstü durumlarda okul idaresinin ve Valiliğin yapacağı özel duyurular geçerlidir.
+                    </div>
+                </details>
+
+                <!-- FAQ 2 -->
+                <details class="group bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+                    <summary class="flex justify-between items-center font-semibold cursor-pointer p-5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <span>Kar tatili haberleri nereden takip edilir?</span>
+                        <span class="transition-transform duration-300 group-open:rotate-180 text-slate-400">
+                            <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="text-slate-600 dark:text-slate-300 p-5 pt-0 text-sm md:text-base leading-relaxed">
+                        Kar tatili veya olumsuz hava koşullarına bağlı tatil kararları, bulunduğunuz ilin <strong>Valilik</strong> resmi web sitesinden ve Valiliklerin resmi sosyal medya (Twitter/X vb.) hesaplarından duyurulur. Ayrıca okulunuzun SMS bildirimleri de en güvenilir kaynaklardan biridir.
+                    </div>
+                </details>
+
+                <!-- FAQ 3 -->
+                <details class="group bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+                    <summary class="flex justify-between items-center font-semibold cursor-pointer p-5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <span>Üniversiteler bu takvime dahil mi?</span>
+                        <span class="transition-transform duration-300 group-open:rotate-180 text-slate-400">
+                            <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="text-slate-600 dark:text-slate-300 p-5 pt-0 text-sm md:text-base leading-relaxed">
+                        Hayır. Bu takvim Milli Eğitim Bakanlığı'na (MEB) bağlı ilkokul, ortaokul ve liseleri kapsamaktadır. Üniversitelerin akademik takvimleri ve tatil günleri her üniversitenin kendi senatosu tarafından belirlenir. Resmi bayramlar dışındaki ara tatiller üniversiteler için geçerli değildir.
+                    </div>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 py-8 text-center text-sm text-slate-500 dark:text-slate-400 transition-colors duration-300">
+        <p>&copy; <span id="current-year"></span> Tatil Mi? Tüm hakları saklıdır. Eğitim amaçlı hazırlanmıştır.</p>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button id="scroll-to-top-btn" class="fixed bottom-8 right-8 z-50 p-3 bg-gradient-to-tr from-teal-600 to-emerald-500 text-white rounded-full shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 hover:-translate-y-1 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none focus:outline-none" aria-label="Yukarı Çık">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+    </button>
+
+    <script src="js/app.js" defer></script>
+</body>
+</html>
