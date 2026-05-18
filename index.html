@@ -93,20 +93,57 @@
 
         <!-- Holiday Schedule Section -->
         <section class="opacity-0 animate-fadeInUp" style="animation-delay: 200ms;">
-            <div class="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+            <div class="mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
                 <div>
                     <h2 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">Tatil Takvimi</h2>
                     <p class="text-slate-500 dark:text-slate-400 mt-2">Güncel eğitim öğretim yılı ve resmi tatiller.</p>
                 </div>
-                <label class="inline-flex items-center cursor-pointer group">
-                    <input type="checkbox" id="filter-past-toggle" class="sr-only peer">
-                    <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-gradient-to-r peer-checked:from-teal-500 peer-checked:to-emerald-500 group-hover:shadow-md"></div>
-                    <span class="ms-3 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors group-hover:text-teal-600 dark:group-hover:text-teal-400">Geçmiş Tatilleri Gizle</span>
-                </label>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <!-- Görünüm Seçeneği (Toggle) -->
+                    <div class="flex bg-slate-200/50 dark:bg-slate-700/50 p-1 rounded-lg">
+                        <button id="view-list-btn" class="px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 shadow-sm text-teal-600 dark:text-teal-400 transition-all">Liste</button>
+                        <button id="view-calendar-btn" class="px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Takvim</button>
+                    </div>
+
+                    <!-- Geçmiş Tatilleri Gizle (Sadece Listede Görünür) -->
+                    <label id="filter-past-wrapper" class="inline-flex items-center cursor-pointer group">
+                        <input type="checkbox" id="filter-past-toggle" class="sr-only peer">
+                        <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-gradient-to-r peer-checked:from-teal-500 peer-checked:to-emerald-500 group-hover:shadow-md"></div>
+                        <span class="ms-3 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors group-hover:text-teal-600 dark:group-hover:text-teal-400">Geçmiş Tatilleri Gizle</span>
+                    </label>
+                </div>
             </div>
             
+            <!-- Liste Görünümü -->
             <div id="holiday-schedule" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Injected via JS -->
+            </div>
+            
+            <!-- Takvim Görünümü -->
+            <div id="calendar-container" class="hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="calendar-month-year" class="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100 capitalize"></h3>
+                    <div class="flex gap-2">
+                        <button id="prev-month-btn" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" aria-label="Önceki Ay">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button id="next-month-btn" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" aria-label="Sonraki Ay">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-1 md:gap-4 text-center text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 uppercase tracking-wider">
+                    <div>Pzt</div><div>Sal</div><div>Çar</div><div>Per</div><div>Cum</div><div>Cmt</div><div>Paz</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1 md:gap-4">
+                    <!-- Days injected via JS -->
+                </div>
+                <!-- Legend -->
+                <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full border-2 border-teal-400 bg-teal-100 dark:bg-teal-900/40"></span> Okul Tatili</div>
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full border-2 border-amber-400 bg-amber-100 dark:bg-amber-900/40"></span> Resmi Tatil</div>
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700"></span> Bugün</div>
+                </div>
             </div>
         </section>
 

@@ -36,6 +36,11 @@ let isHoliday = false;
 let nextHoliday = null;
 let hidePastHolidays = localStorage.getItem('hide-past-holidays') === 'true';
 
+// Takvim Görünümü Durumları
+let currentView = localStorage.getItem('calendar-view') || 'list';
+let currentMonth = today.getMonth();
+let currentYear = today.getFullYear();
+
 // Countdown Logic
 function updateCountdown() {
     const labelEl = document.getElementById('next-holiday-label');
@@ -156,6 +161,75 @@ function updateDOM() {
     }
 
     updateCountdown();
+
+    // Görünüm (Liste/Takvim) Seçimine Göre Ekranı Ayarla
+    const calendarContainer = document.getElementById('calendar-container');
+    const filterPastWrapper = document.getElementById('filter-past-wrapper');
+    
+    if (currentView === 'list') {
+        scheduleContainer.classList.remove('hidden');
+        if(filterPastWrapper) filterPastWrapper.classList.remove('hidden');
+        calendarContainer.classList.add('hidden');
+    } else {
+        scheduleContainer.classList.add('hidden');
+        if(filterPastWrapper) filterPastWrapper.classList.add('hidden');
+        calendarContainer.classList.remove('hidden');
+        renderCalendar();
+    }
+}
+
+function renderCalendar() {
+    const monthYearEl = document.getElementById('calendar-month-year');
+    const gridEl = document.getElementById('calendar-grid');
+    
+    const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+    monthYearEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+    
+    gridEl.innerHTML = "";
+    
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    let firstDayIndex = firstDay - 1;
+    if (firstDayIndex === -1) firstDayIndex = 6;
+    
+    for (let i = 0; i < firstDayIndex; i++) {
+        gridEl.innerHTML += `<div></div>`;
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(currentYear, currentMonth, day).getTime();
+        
+        let isHolidayDate = false;
+        let holidayType = null;
+        let holidayNames = [];
+        
+        for (const holiday of holidays) {
+            const start = getStartOfDay(holiday.start);
+            const end = getEndOfDay(holiday.end);
+            if (date >= start && date <= end) {
+                isHolidayDate = true;
+                holidayType = holiday.type;
+                if(!holidayNames.includes(holiday.name)) holidayNames.push(holiday.name);
+            }
+        }
+        
+        const isToday = (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear());
+        let dayClass = "w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 mx-auto flex items-center justify-center rounded-full text-slate-700 dark:text-slate-200 transition-all cursor-default relative group text-xs sm:text-sm md:text-base";
+        
+        if (isHolidayDate) {
+            const baseColor = holidayType === 'meb' ? 'teal' : 'amber';
+            dayClass += ` bg-${baseColor}-100 dark:bg-${baseColor}-900/40 text-${baseColor}-800 dark:text-${baseColor}-300 font-bold border-2 border-${baseColor}-400 dark:border-${baseColor}-600 shadow-sm z-10 hover:scale-110 hover:z-20 cursor-help`;
+        } else if (isToday) {
+            dayClass += " bg-slate-200 dark:bg-slate-700 font-bold";
+        } else {
+            dayClass += " hover:bg-slate-100 dark:hover:bg-slate-700/50";
+        }
+        
+        const tooltipHTML = isHolidayDate ? `<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 text-xs px-3 py-1.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-50 font-medium">${holidayNames.join(', ')}<div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-100"></div></div>` : '';
+        
+        gridEl.innerHTML += `<div class="relative flex justify-center items-center py-1 md:p-2"><div class="${dayClass}"><span>${day}</span>${tooltipHTML}</div></div>`;
+    }
 }
 
 async function initApp() {
@@ -242,6 +316,43 @@ window.addEventListener('scroll', () => {
 
 scrollToTopBtn.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// Takvim / Liste Görünümü Buton Kontrolleri
+const viewListBtn = document.getElementById('view-list-btn');
+const viewCalendarBtn = document.getElementById('view-calendar-btn');
+
+function updateViewButtons() {
+    if (!viewListBtn || !viewCalendarBtn) return;
+    if (currentView === 'list') {
+        viewListBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 shadow-sm text-teal-600 dark:text-teal-400 transition-all";
+        viewCalendarBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all";
+    } else {
+        viewCalendarBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 shadow-sm text-teal-600 dark:text-teal-400 transition-all";
+        viewListBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all";
+    }
+}
+
+viewListBtn?.addEventListener('click', () => { currentView = 'list'; localStorage.setItem('calendar-view', 'list'); updateViewButtons(); updateDOM(); });
+viewCalendarBtn?.addEventListener('click', () => { currentView = 'calendar'; localStorage.setItem('calendar-view', 'calendar'); updateViewButtons(); updateDOM(); });
+updateViewButtons();
+
+// Takvim İleri / Geri Butonları Olayları
+document.getElementById('prev-month-btn')?.addEventListener('click', () => {
+    currentMonth--;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
+    renderCalendar();
+});
+document.getElementById('next-month-btn')?.addEventListener('click', () => {
+    currentMonth++;
+    if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
+    renderCalendar();
 });
 
 // Uygulamayı Başlat
