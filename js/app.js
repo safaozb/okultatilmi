@@ -68,9 +68,9 @@ function updateCountdown() {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
     document.getElementById('countdown').innerHTML = 
-        `<span class="font-bold text-teal-600 dark:text-teal-400">${days}</span> Gün 
-         <span class="font-bold text-teal-600 dark:text-teal-400">${hours}</span> Saat 
-         <span class="font-bold text-teal-600 dark:text-teal-400">${minutes}</span> Dakika`;
+        `<span class="font-bold text-indigo-600 dark:text-indigo-400">${days}</span> Gün 
+         <span class="font-bold text-indigo-600 dark:text-indigo-400">${hours}</span> Saat 
+         <span class="font-bold text-indigo-600 dark:text-indigo-400">${minutes}</span> Dakika`;
 }
 
 function updateDOM() {
@@ -97,7 +97,7 @@ function updateDOM() {
         // Daha modern etkileşimli kart sınıfları ve sırayla geliş animasyonu
         const interactionClass = isPast 
             ? "opacity-60 grayscale bg-slate-50 dark:bg-slate-800/50" 
-            : "bg-white dark:bg-slate-800 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-teal-500/10 dark:hover:shadow-teal-900/20 hover:border-teal-300 dark:hover:border-teal-700 cursor-default";
+            : "bg-white dark:bg-slate-800 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-900/20 hover:border-indigo-300 dark:hover:border-indigo-700 cursor-default";
         const dateRange = start === end ? formatDate(holiday.start) : `${formatDate(holiday.start)} - ${formatDate(holiday.end)}`;
 
         // Takvim yaprağı görünümü için tarihi ayrıştırıyoruz (Sol taraftaki ikonik takvim için)
@@ -108,18 +108,18 @@ function updateDOM() {
 
         // Türüne Göre Renklendirme ve Etiketler
         const isMeb = holiday.type === 'meb';
-        const leafBgClass = isMeb ? 'bg-teal-50 dark:bg-teal-900/20 border-teal-100 dark:border-teal-800/50' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/50';
-        const leafTextClass = isMeb ? 'text-teal-600 dark:text-teal-400' : 'text-amber-600 dark:text-amber-400';
-        const badgeClass = isMeb ? 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-800/50' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
+        const leafBgClass = isMeb ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800/50' : 'bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-800/50';
+        const leafTextClass = isMeb ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400';
+        const badgeClass = isMeb ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/50' : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/50';
         const typeLabel = isMeb ? 'Okul Tatili' : 'Resmi Tatil';
         const gCalLink = getGoogleCalendarLink(holiday);
 
         const cardHTML = `
-            <div class="${interactionClass} border border-slate-200 dark:border-slate-700 rounded-2xl p-5 flex items-center gap-5 transition-all duration-300 opacity-0 animate-fadeInUp" style="animation-delay: ${index * 100}ms;">
+            <div class="${interactionClass} border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-5 transition-all duration-300 opacity-0 animate-fadeInUp" style="animation-delay: ${index * 100}ms;">
                 <!-- Takvim Yaprağı İkonu -->
-                <div class="flex flex-col items-center justify-center rounded-xl min-w-[75px] h-[80px] border shadow-sm shrink-0 ${leafBgClass}">
+                <div class="flex flex-col items-center justify-center rounded-xl min-w-[60px] sm:min-w-[75px] h-[70px] sm:h-[80px] border shadow-sm shrink-0 ${leafBgClass}">
                     <span class="text-xs font-bold uppercase tracking-wider ${leafTextClass}">${leafMonth}</span>
-                    <span class="text-2xl font-black text-slate-800 dark:text-slate-100 leading-none my-0.5">${leafDay}</span>
+                    <span class="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 leading-none my-0.5">${leafDay}</span>
                     <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">${leafWeekday}</span>
                 </div>
                 
@@ -127,7 +127,7 @@ function updateDOM() {
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-start gap-2">
                         <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 leading-tight mb-1 truncate" title="${holiday.name}">${holiday.name}</h3>
-                        <a href="${gCalLink}" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors shrink-0" title="Google Takvim'e Ekle">
+                        <a href="${gCalLink}" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors shrink-0" title="Google Takvim'e Ekle">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </a>
                     </div>
@@ -155,7 +155,7 @@ function updateDOM() {
     
     if (isHoliday) {
         // Tatil günüyse ekstra dikkat çekici animasyon
-        statusEl.className = "text-6xl md:text-7xl font-black mb-8 transition-colors duration-300 text-emerald-500 animate-pulseSlow scale-105 transform";
+        statusEl.className = "text-6xl md:text-7xl font-black mb-8 transition-colors duration-300 text-indigo-500 animate-pulseSlow scale-105 transform";
     } else {
         statusEl.className = "text-6xl md:text-7xl font-black mb-8 transition-colors duration-300 text-rose-500";
     }
@@ -167,13 +167,21 @@ function updateDOM() {
     const filterPastWrapper = document.getElementById('filter-past-wrapper');
     
     if (currentView === 'list') {
-        scheduleContainer.classList.remove('hidden');
+        scheduleContainer.classList.add('view-visible');
+        scheduleContainer.classList.remove('view-hidden');
+        
+        calendarContainer.classList.add('view-hidden');
+        calendarContainer.classList.remove('view-visible');
+
         if(filterPastWrapper) filterPastWrapper.classList.remove('hidden');
-        calendarContainer.classList.add('hidden');
     } else {
-        scheduleContainer.classList.add('hidden');
+        scheduleContainer.classList.add('view-hidden');
+        scheduleContainer.classList.remove('view-visible');
+
+        calendarContainer.classList.add('view-visible');
+        calendarContainer.classList.remove('view-hidden');
+        
         if(filterPastWrapper) filterPastWrapper.classList.add('hidden');
-        calendarContainer.classList.remove('hidden');
         renderCalendar();
     }
 }
@@ -215,10 +223,10 @@ function renderCalendar() {
         }
         
         const isToday = (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear());
-        let dayClass = "w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 mx-auto flex items-center justify-center rounded-full text-slate-700 dark:text-slate-200 transition-all cursor-default relative group text-xs sm:text-sm md:text-base";
+        let dayClass = "w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 mx-auto flex items-center justify-center rounded-full text-slate-700 dark:text-slate-200 transition-all cursor-default relative group text-[10px] sm:text-sm md:text-base";
         
         if (isHolidayDate) {
-            const baseColor = holidayType === 'meb' ? 'teal' : 'amber';
+            const baseColor = holidayType === 'meb' ? 'indigo' : 'rose';
             dayClass += ` bg-${baseColor}-100 dark:bg-${baseColor}-900/40 text-${baseColor}-800 dark:text-${baseColor}-300 font-bold border-2 border-${baseColor}-400 dark:border-${baseColor}-600 shadow-sm z-10 hover:scale-110 hover:z-20 cursor-help`;
         } else if (isToday) {
             dayClass += " bg-slate-200 dark:bg-slate-700 font-bold";
@@ -228,7 +236,7 @@ function renderCalendar() {
         
         const tooltipHTML = isHolidayDate ? `<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 text-xs px-3 py-1.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-50 font-medium">${holidayNames.join(', ')}<div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-100"></div></div>` : '';
         
-        gridEl.innerHTML += `<div class="relative flex justify-center items-center py-1 md:p-2"><div class="${dayClass}"><span>${day}</span>${tooltipHTML}</div></div>`;
+        gridEl.innerHTML += `<div class="relative flex justify-center items-center py-0.5 sm:py-1 md:p-2"><div class="${dayClass}"><span>${day}</span>${tooltipHTML}</div></div>`;
     }
 }
 
@@ -325,10 +333,10 @@ const viewCalendarBtn = document.getElementById('view-calendar-btn');
 function updateViewButtons() {
     if (!viewListBtn || !viewCalendarBtn) return;
     if (currentView === 'list') {
-        viewListBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 shadow-sm text-teal-600 dark:text-teal-400 transition-all";
+        viewListBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400 transition-all";
         viewCalendarBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all";
     } else {
-        viewCalendarBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 shadow-sm text-teal-600 dark:text-teal-400 transition-all";
+        viewCalendarBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400 transition-all";
         viewListBtn.className = "px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all";
     }
 }

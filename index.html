@@ -6,6 +6,21 @@
     
     <meta charset="UTF-8">
     <!-- API bağlantısını hızlandırmak için preconnect ekleniyor -->
+    
+    <!-- Open Graph Meta Etiketleri (Facebook, WhatsApp, Instagram vb.) -->
+    <meta property="og:title" content="Okul Tatil Mi? - Bugün Okul Tatil mi?">
+    <meta property="og:description" content="Bugün okul var mı, yoksa tatil mi? Milli Eğitim Bakanlığı (MEB) ve resmi tatil takvimlerini anında öğrenin. En yakın tatil kaç gün kaldı?">
+    <meta property="og:image" content="https://okultatilmi.com/img/banner.png"> <!-- Sitenizin canlı URL'sine göre güncelleyin -->
+    <meta property="og:url" content="https://okultatilmi.com"> <!-- Sitenizin canlı URL'sini buraya yazın -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Okul Tatil Mi?">
+
+    <!-- Twitter Card Meta Etiketleri -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Okul Tatil Mi? - Bugün Okul Tatil mi?">
+    <meta name="twitter:description" content="Bugün okul var mı, yoksa tatil mi? Milli Eğitim Bakanlığı (MEB) ve resmi tatil takvimlerini anında öğrenin. En yakın tatil kaç gün kaldı?">
+    <meta name="twitter:image" content="https://okultatilmi.com/img/banner.png"> <!-- Sitenizin canlı URL'sine göre güncelleyin -->
+    
     <link rel="preconnect" href="https://date.nager.at">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,12 +53,12 @@
     </script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-teal-50 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950 text-slate-800 dark:text-slate-100 antialiased min-h-screen flex flex-col transition-colors duration-300">
+<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950 text-slate-800 dark:text-slate-100 antialiased min-h-screen flex flex-col transition-colors duration-300">
 
     <!-- Navbar -->
     <nav class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
-        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-500 dark:from-teal-400 dark:to-emerald-400 tracking-tight drop-shadow-sm">Tatil Mi?</a>
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 tracking-tight drop-shadow-sm">Tatil Mi?</a>
             <div class="flex items-center gap-4">
                 <div class="text-sm font-medium text-slate-500 dark:text-slate-400 hidden sm:block" id="current-date-display"></div>
                 <button id="theme-toggle" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 focus:outline-none transition-colors">
@@ -57,7 +72,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow max-w-5xl mx-auto w-full px-6 py-10 space-y-16">
+    <main class="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 md:py-10 space-y-12 md:space-y-16">
         
         <!-- Hero Section -->
         <section class="text-center bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-all duration-300 opacity-0 animate-fadeInUp hover:shadow-md">
@@ -79,7 +94,7 @@
             </div>
 
             <!-- Countdown Timer -->
-            <div class="inline-block bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-6 md:px-10 transition-all duration-300 group hover:border-teal-300 dark:hover:border-teal-700 hover:shadow-lg hover:shadow-teal-500/10">
+            <div class="inline-block bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-6 md:px-10 transition-all duration-300 group hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-lg hover:shadow-indigo-500/10">
                 <p id="next-holiday-label" class="text-sm md:text-base text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-2">
                     En Yakın Tatile Kalan Süre
                 </p>
@@ -101,26 +116,26 @@
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <!-- Görünüm Seçeneği (Toggle) -->
                     <div class="flex bg-slate-200/50 dark:bg-slate-700/50 p-1 rounded-lg">
-                        <button id="view-list-btn" class="px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 shadow-sm text-teal-600 dark:text-teal-400 transition-all">Liste</button>
+                        <button id="view-list-btn" class="px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400 transition-all">Liste</button>
                         <button id="view-calendar-btn" class="px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Takvim</button>
                     </div>
 
                     <!-- Geçmiş Tatilleri Gizle (Sadece Listede Görünür) -->
                     <label id="filter-past-wrapper" class="inline-flex items-center cursor-pointer group">
                         <input type="checkbox" id="filter-past-toggle" class="sr-only peer">
-                        <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-gradient-to-r peer-checked:from-teal-500 peer-checked:to-emerald-500 group-hover:shadow-md"></div>
-                        <span class="ms-3 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors group-hover:text-teal-600 dark:group-hover:text-teal-400">Geçmiş Tatilleri Gizle</span>
+                        <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-gradient-to-r peer-checked:from-indigo-500 peer-checked:to-purple-500 group-hover:shadow-md"></div>
+                        <span class="ms-3 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400">Geçmiş Tatilleri Gizle</span>
                     </label>
                 </div>
             </div>
             
             <!-- Liste Görünümü -->
-            <div id="holiday-schedule" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="holiday-schedule" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 view-transition view-visible">
                 <!-- Injected via JS -->
             </div>
             
             <!-- Takvim Görünümü -->
-            <div id="calendar-container" class="hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-6 shadow-sm">
+            <div id="calendar-container" class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-6 shadow-sm view-transition view-hidden">
                 <div class="flex justify-between items-center mb-6">
                     <h3 id="calendar-month-year" class="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100 capitalize"></h3>
                     <div class="flex gap-2">
@@ -132,7 +147,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="grid grid-cols-7 gap-1 md:gap-4 text-center text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 uppercase tracking-wider">
+                <div class="grid grid-cols-7 gap-1 md:gap-4 text-center text-[10px] sm:text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 uppercase tracking-wider">
                     <div>Pzt</div><div>Sal</div><div>Çar</div><div>Per</div><div>Cum</div><div>Cmt</div><div>Paz</div>
                 </div>
                 <div id="calendar-grid" class="grid grid-cols-7 gap-1 md:gap-4">
@@ -140,8 +155,8 @@
                 </div>
                 <!-- Legend -->
                 <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
-                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full border-2 border-teal-400 bg-teal-100 dark:bg-teal-900/40"></span> Okul Tatili</div>
-                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full border-2 border-amber-400 bg-amber-100 dark:bg-amber-900/40"></span> Resmi Tatil</div>
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full border-2 border-indigo-400 bg-indigo-100 dark:bg-indigo-900/40"></span> Okul Tatili</div>
+                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full border-2 border-rose-400 bg-rose-100 dark:bg-rose-900/40"></span> Resmi Tatil</div>
                     <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700"></span> Bugün</div>
                 </div>
             </div>
@@ -202,7 +217,7 @@
     </footer>
 
     <!-- Scroll to Top Button -->
-    <button id="scroll-to-top-btn" class="fixed bottom-8 right-8 z-50 p-3 bg-gradient-to-tr from-teal-600 to-emerald-500 text-white rounded-full shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 hover:-translate-y-1 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none focus:outline-none" aria-label="Yukarı Çık">
+    <button id="scroll-to-top-btn" class="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 p-2.5 md:p-3 bg-gradient-to-tr from-indigo-600 to-purple-600 text-white rounded-full shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-1 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none focus:outline-none" aria-label="Yukarı Çık">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     </button>
 
