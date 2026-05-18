@@ -205,6 +205,9 @@ function renderCalendar() {
         gridEl.innerHTML += `<div></div>`;
     }
     
+    // Bugünün başlangıç zamanını hesapla (Geçmiş günleri tespit etmek için)
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+
     for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(currentYear, currentMonth, day).getTime();
         
@@ -234,6 +237,11 @@ function renderCalendar() {
             dayClass += " hover:bg-slate-100 dark:hover:bg-slate-700/50";
         }
         
+        // Geçmişteki tüm günleri (tatil veya normal) hafifçe soluklaştır
+        if (date < startOfToday) {
+            dayClass += " opacity-40 grayscale";
+        }
+
         const tooltipHTML = isHolidayDate ? `<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 text-xs px-3 py-1.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-50 font-medium">${holidayNames.join(', ')}<div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-100"></div></div>` : '';
         
         gridEl.innerHTML += `<div class="relative flex justify-center items-center py-0.5 sm:py-1 md:p-2"><div class="${dayClass}"><span>${day}</span>${tooltipHTML}</div></div>`;

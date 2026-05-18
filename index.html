@@ -52,8 +52,54 @@
         }
     </script>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Özel Kaydırma Çubuğu (Scrollbar) Tasarımı */
+        ::-webkit-scrollbar {
+            width: 14px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; /* bg-slate-100 */
+        }
+        html.dark ::-webkit-scrollbar-track {
+            background: #0f172a; /* bg-slate-900 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1; /* bg-slate-300 */
+            border-radius: 8px;
+            border: 4px solid #f1f5f9; /* Arkaplan ile aynı border rengi vererek scroll'a padding efekti kazandırıyoruz */
+        }
+        html.dark ::-webkit-scrollbar-thumb {
+            background-color: #475569; /* bg-slate-600 */
+            border: 4px solid #0f172a;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #6366f1; /* bg-indigo-500 (Üzerine gelindiğinde) */
+        }
+        html.dark ::-webkit-scrollbar-thumb:hover {
+            background-color: #818cf8; /* bg-indigo-400 (Üzerine gelindiğinde) */
+        }
+
+        /* Firefox Tarayıcı Desteği İçin */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        html.dark {
+            scrollbar-color: #475569 #0f172a;
+        }
+
+        /* Mobil Cihazlar İçin Daha İnce Kaydırma Çubuğu */
+        @media (max-width: 640px) {
+            ::-webkit-scrollbar {
+                width: 8px; /* Genişliği 14px'den 8px'e düşürüyoruz */
+            }
+            ::-webkit-scrollbar-thumb, html.dark ::-webkit-scrollbar-thumb {
+                border-width: 2px; /* Dış boşluk etkisini mobil için inceltiyoruz */
+            }
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950 text-slate-800 dark:text-slate-100 antialiased min-h-screen flex flex-col transition-colors duration-300">
+<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950 text-slate-800 dark:text-slate-100 antialiased min-h-screen flex flex-col transition-colors duration-300 select-none">
 
     <!-- Navbar -->
     <nav class="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
