@@ -1,10 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+import { getFirestore, collection, getDocs, doc, setDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { firebaseConfig, initialHolidays } from "./config.js";
 
 // Firebase Başlatma (Config eklendiyse çalışır)
 const app = firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null;
 const db = app ? getFirestore(app) : null;
+const analytics = (app && firebaseConfig.measurementId) ? getAnalytics(app) : null;
+const messaging = (app && firebaseConfig.vapidKey) ? getMessaging(app) : null;
 
 // Başlangıç tatillerini config'den al (Uygulama çalıştıkça API'den ve veritabanından gelen veriler eklenecek)
 let holidays = [...initialHolidays];
@@ -41,6 +45,14 @@ let hidePastHolidays = localStorage.getItem('hide-past-holidays') === 'true';
 let currentView = localStorage.getItem('calendar-view') || 'list';
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
+
+// --- Dinamik Paylaşım Linki (WhatsApp) ---
+const whatsappBtn = document.getElementById("whatsapp-share-btn");
+if (whatsappBtn) {
+    const siteUrl = window.location.origin; // Otomatik olarak mevcut site adresini alır (Örn: localhost veya firebase)
+    const shareText = encodeURIComponent(`Yarın okullar tatil mi? Buradan bakabilirsin: ${siteUrl}`);
+    whatsappBtn.href = `https://api.whatsapp.com/send?text=${shareText}`;
+}
 
 // Countdown Logic
 function updateCountdown() {
@@ -249,6 +261,33 @@ function renderCalendar() {
     }
 }
 
+// --- ZİYARETÇİ SAYACI MANTIĞI ---
+function initVisitorCounter() {
+    if (!db) return;
+    const statsRef = doc(db, "site_stats", "visitors");
+    const todayStr = new Date().toISOString().split('T')[0]; // Örn: "2026-05-20"
+    const dailyStatsRef = doc(db, "site_stats", `daily_${todayStr}`);
+
+    const lastVisit = localStorage.getItem("lastVisitDate");
+
+    // Eğer kullanıcı siteye BUGÜN ilk defa giriyorsa
+    if (lastVisit !== todayStr) {
+        if (!localStorage.getItem("hasVisited")) {
+            setDoc(statsRef, { count: increment(1) }, { merge: true }).catch(err => console.error("Toplam ziyaretçi sayılamadı:", err));
+            localStorage.setItem("hasVisited", "true");
+        }
+        setDoc(dailyStatsRef, { count: increment(1) }, { merge: true })
+            .then(() => localStorage.setItem("lastVisitDate", todayStr))
+            .catch(err => console.error("Ziyaretçi sayılamadı:", err));
+    }
+
+    // Canlı olarak sayacı dinle ve ekranda göster
+    onSnapshot(statsRef, (docSnap) => {
+        const countEl = document.getElementById("visitor-count");
+        if (docSnap.exists() && countEl) countEl.textContent = docSnap.data().count.toLocaleString('tr-TR');
+    });
+}
+
 async function initApp() {
     const currentYear = today.getFullYear();
     
@@ -291,7 +330,10 @@ async function initApp() {
                     type: "public"
                 }));
             
-            holidays = [...holidays, ...publicHolidays].sort((a, b) => getStartOfDay(a.start) - getStartOfDay(b.start));
+            // Sistem (API) tatilleriyle özel tatillerin çakışmasını engelle (Özel tatil önceliklidir)
+            const filteredPublicHolidays = publicHolidays.filter(pubHol => !holidays.some(h => h.start === pubHol.start));
+            
+            holidays = [...holidays, ...filteredPublicHolidays].sort((a, b) => getStartOfDay(a.start) - getStartOfDay(b.start));
             
             // 3. API'den gelen ekstra tatiller eklenince ekranı tekrar çiz
             updateDOM();
@@ -299,6 +341,9 @@ async function initApp() {
     } catch (error) {
         console.error("Resmi tatiller API'den çekilemedi:", error);
     }
+
+    // Ziyaretçi sayacını başlat
+    initVisitorCounter();
 
     setInterval(updateCountdown, 60000);
 }
@@ -391,3 +436,105 @@ document.getElementById('next-month-btn')?.addEventListener('click', () => {
 
 // Uygulamayı Başlat
 initApp();
+
+// --- KAYNAK KOD KORUMASI (Sağ Tık ve Geliştirici Araçları Engelleme) ---
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+document.addEventListener('keydown', (e) => {
+    // F12 tuşunu engelle
+    if (e.key === 'F12') {
+        e.preventDefault();
+    }
+    // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C engelleme (Geliştirici Araçları)
+    if (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) {
+        e.preventDefault();
+    }
+    // Ctrl+U engelleme (Kaynağı Görüntüle)
+    if (e.ctrlKey && ['U', 'u'].includes(e.key)) {
+        e.preventDefault();
+    }
+});
+
+// --- UYGULAMAYI İNDİR (PWA KURULUM) MANTIĞI ---
+const installAppBtn = document.getElementById('install-app-btn');
+
+if (installAppBtn) {
+    installAppBtn.addEventListener('click', async () => {
+        if (!window.deferredPrompt) return;
+        // Kurulum uyarısını (sistem penceresini) göster
+        window.deferredPrompt.prompt();
+        // Kullanıcının kararını bekle
+        const { outcome } = await window.deferredPrompt.userChoice;
+        // İşlem tamamlandıktan sonra saklanan olayı temizle
+        window.deferredPrompt = null;
+        // İndirme butonunu geri gizle
+        installAppBtn.classList.add('hidden');
+    });
+}
+
+window.addEventListener('appinstalled', () => {
+    // Kurulum tamamen bittiyse log düş ve hafızayı temizle
+    window.deferredPrompt = null;
+    if (installAppBtn) installAppBtn.classList.add('hidden');
+});
+
+function initPushNotifications(swRegistration) {
+    if (!messaging) return;
+    const banner = document.getElementById('push-notification-banner');
+    const enableBtn = document.getElementById('enable-push-btn');
+    const dismissBtn = document.getElementById('dismiss-push-btn');
+
+    // Eğer bildirim izni daha önce sorulmadıysa 4 saniye sonra afişi çıkar
+    if (Notification.permission === 'default' && !localStorage.getItem('push-dismissed')) {
+        setTimeout(() => {
+            banner.classList.remove('hidden');
+            void banner.offsetWidth; // Reflow tetikle
+            banner.classList.remove('translate-y-[150%]', 'opacity-0');
+        }, 4000);
+    }
+
+    dismissBtn?.addEventListener('click', () => {
+        banner.classList.add('translate-y-[150%]', 'opacity-0');
+        setTimeout(() => banner.classList.add('hidden'), 500);
+        localStorage.setItem('push-dismissed', 'true');
+    });
+
+    enableBtn?.addEventListener('click', async () => {
+        const originalText = enableBtn.textContent;
+        enableBtn.disabled = true;
+        enableBtn.textContent = "Lütfen Bekleyin...";
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const token = await getToken(messaging, { vapidKey: firebaseConfig.vapidKey, serviceWorkerRegistration: swRegistration });
+                if (token) await setDoc(doc(db, 'fcm_tokens', token), { token: token, timestamp: new Date().toISOString() }, { merge: true });
+                alert("Harika! Bildirimler başarıyla açıldı.");
+            } else {
+                alert("Bildirim izni reddedildi. Bildirim almak için tarayıcınızın adres çubuğundaki kilit (🔒) ikonuna tıklayıp bildirimlere izin vermeniz gerekir.");
+            }
+            banner.classList.add('translate-y-[150%]', 'opacity-0');
+            setTimeout(() => banner.classList.add('hidden'), 500);
+        } catch (error) { 
+            alert("Sistemsel bir hata oluştu! Eğer site sahibiyseniz 'config.js' içindeki 'vapidKey' anahtarını oluşturduğunuzdan emin olun.\n\nHata: " + error.message);
+            enableBtn.disabled = false;
+            enableBtn.textContent = originalText;
+        }
+    });
+
+    // Site açıkken bildirim gelirse uygulama içinde uyarı olarak göster
+    onMessage(messaging, (payload) => {
+        alert(`🔔 DUYURU: ${payload.notification.title}\n${payload.notification.body}`);
+    });
+}
+
+// --- PWA (Service Worker) KAYDI ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+                console.log('PWA ServiceWorker başarıyla kaydedildi.', registration.scope);
+                initPushNotifications(registration);
+            })
+            .catch(err => console.error('PWA ServiceWorker hatası:', err));
+    });
+}
