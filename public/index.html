@@ -2,7 +2,7 @@
 <html lang="tr" class="scroll-smooth">
 <head>
     <!-- add favicon img/favicon.png -->
-     <link rel="icon" type="image/png" href="img/favicon.png">
+     <link rel="icon" type="image/png" href="/img/favicon.png">
     
     <meta charset="UTF-8">
     <!-- API bağlantısını hızlandırmak için preconnect ekleniyor -->
@@ -51,7 +51,7 @@
             document.documentElement.classList.remove('dark');
         }
     </script>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
     <style>
         /* Özel Kaydırma Çubuğu (Scrollbar) Tasarımı */
         ::-webkit-scrollbar {
@@ -124,7 +124,7 @@
         <section class="text-center bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-all duration-300 opacity-0 animate-fadeInUp hover:shadow-md">
             <!-- Banner Image -->
             <div class="w-full h-40 sm:h-56 relative">
-                <img src="img/banner.jpg" alt="Tatil Banner" class="w-full h-full object-cover opacity-90" onerror="this.onerror=null; this.src='img/banner.png';">
+                <img src="/img/banner.png" alt="Tatil Banner" class="w-full h-full object-cover opacity-90">
                 <div class="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-800 to-transparent"></div>
             </div>
             
@@ -267,7 +267,7 @@
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     </button>
 
-    <script src="js/app.js" defer></script>
+    <script type="module" src="/js/app.js"></script>
 </body>
 </html>
 

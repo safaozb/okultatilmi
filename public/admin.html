@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetim Paneli - Tatil Mi?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="/img/favicon.png">
+    <style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex items-center justify-center p-4">
+
+    <!-- Toast Bildirim Konteyneri -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Kimlik Doğrulama Ekranı -->
+    <div id="login-section" class="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 transition-transform">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight drop-shadow-sm">Yönetici Girişi</h1>
+            <p class="text-sm text-slate-500 mt-2">Sisteme erişmek için bilgilerinizi girin</p>
+        </div>
+        <form id="login-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">E-posta</label>
+                <input type="email" id="email" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Şifre</label>
+                <div class="relative">
+                    <input type="password" id="password" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-10">
+                    <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none" aria-label="Şifreyi Göster/Gizle">
+                        <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        <svg id="eye-slash-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="login-error-container" class="hidden bg-rose-50 border border-rose-200 text-rose-600 px-4 py-3 rounded-lg text-sm flex items-start gap-3 transition-opacity">
+                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div id="login-error-text" class="font-medium"></div>
+            </div>
+            <button type="submit" id="login-button" class="w-full bg-indigo-600 text-white font-bold py-2 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center">
+                <span id="login-button-text">Giriş Yap</span>
+                <span id="login-spinner" class="hidden">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Tatil Ekleme Paneli (Yalnızca giriş yapınca görünür) -->
+    <div id="admin-section" class="w-full max-w-lg bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-indigo-600">Yeni Tatil Ekle</h1>
+            <button id="logout-btn" class="text-sm font-medium text-slate-500 hover:text-red-600 transition">Çıkış Yap</button>
+        </div>
+        <form id="add-holiday-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Tatil Adı</label>
+                <input type="text" id="h-name" required placeholder="Örn: Kar Tatili (İstanbul)" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Başlangıç Tarihi</label>
+                    <input type="date" id="h-start" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Bitiş Tarihi</label>
+                    <input type="date" id="h-end" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Süre (Metin)</label>
+                    <input type="text" id="h-duration" required placeholder="Örn: 1 Gün" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Tatil Türü</label>
+                    <select id="h-type" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="meb">Okul Tatili (MEB)</option>
+                        <option value="public">Resmi Tatil</option>
+                    </select>
+                </div>
+            </div>
+            <div class="pt-2">
+                <p id="add-success" class="text-green-600 font-medium text-sm hidden text-center mb-2">Tatil başarıyla eklendi ve tüm kullanıcılarda güncellendi!</p>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-lg hover:bg-indigo-700 transition shadow-sm">Tatili Yayınla</button>
+            </div>
+        </form>
+
+        <!-- Mevcut Tatiller Bölümü -->
+        <div class="mt-10 pt-8 border-t border-slate-200 dark:border-slate-700">
+            <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Mevcut Özel Tatiller</h2>
+            <div id="current-holidays-list" class="space-y-3">
+                <!-- Holidays will be injected here by JS -->
+                <p id="no-holidays-msg" class="text-slate-500 text-sm hidden">Henüz eklenmiş özel tatil bulunmamaktadır.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

@@ -1,12 +1,13 @@
-// MEB Okul Tatilleri (Milli Eğitim Bakanlığı verileri her yıl değiştiği için manuel eklenir)
-let holidays = [
-    { name: "Sömestr Tatili", start: "2026-01-19", end: "2026-01-30", duration: "14 Gün", type: "meb" },
-    { name: "2. Ara Tatil", start: "2026-03-16", end: "2026-03-20", duration: "9 Gün", type: "meb" },
-    { name: "Ramazan Bayramı", start: "2026-03-19", end: "2026-03-22", duration: "3.5 Gün", type: "public" },
-    { name: "Kurban Bayramı", start: "2026-05-26", end: "2026-05-30", duration: "4.5 Gün", type: "public" },
-    { name: "Yaz Tatili", start: "2026-06-26", end: "2026-09-07", duration: "73 Gün", type: "meb" },
-    { name: "1. Ara Tatil", start: "2026-11-16", end: "2026-11-20", duration: "9 Gün", type: "meb" }
-];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { firebaseConfig, initialHolidays } from "./config.js";
+
+// Firebase Başlatma (Config eklendiyse çalışır)
+const app = firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null;
+const db = app ? getFirestore(app) : null;
+
+// Başlangıç tatillerini config'den al (Uygulama çalıştıkça API'den ve veritabanından gelen veriler eklenecek)
+let holidays = [...initialHolidays];
 
 // Core Utility Functions
 const getStartOfDay = (dateStr) => new Date(`${dateStr}T00:00:00`).getTime();
@@ -254,6 +255,23 @@ async function initApp() {
     // 1. Ekranı API'yi beklemeden var olan MEB tatilleriyle hemen render et (FCP optimizasyonu)
     updateDOM();
     
+    // Firebase'den Özel (Admin) Tatillerini Çek
+    if (db) {
+        try {
+            const querySnapshot = await getDocs(collection(db, "custom_holidays"));
+            const customHolidays = [];
+            querySnapshot.forEach((doc) => {
+                customHolidays.push(doc.data());
+            });
+            if (customHolidays.length > 0) {
+                holidays = [...holidays, ...customHolidays].sort((a, b) => getStartOfDay(a.start) - getStartOfDay(b.start));
+                updateDOM(); // Ekstra tatiller gelince ekranı yenile
+            }
+        } catch (error) {
+            console.error("Özel tatiller Firebase'den çekilemedi:", error);
+        }
+    }
+
     try {
         // 2. Arka planda Nager API üzerinden resmi tatilleri çek
         const response = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/TR`);
