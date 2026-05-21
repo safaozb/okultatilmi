@@ -1,14 +1,13 @@
-// Uygulamanın genel yapılandırma (config) bilgileri - ÖRNEK ŞABLON
-// NOT: Bu dosyayı kopyalayıp adını "config.js" yapın ve kendi Firebase bilgilerinizi girin.
+// Uygulamanın genel yapılandırma (config) bilgileri
 export const firebaseConfig = {
-  apiKey: "API_ANAHTARINIZ_BURAYA",
-  authDomain: "PROJE_ID.firebaseapp.com",
-  projectId: "PROJE_ID",
-  storageBucket: "PROJE_ID.firebasestorage.app",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID",
-  measurementId: "G-MEASUREMENT_ID",
-  vapidKey: "WEB_PUSH_VAPID_ANAHTARINIZ_BURAYA_GELECEK"
+  apiKey: "AIzaSyCJld0zo2vsnr86rE0hLeZw-WJr0PEj3II",
+  authDomain: "okultatilmii.firebaseapp.com",
+  projectId: "okultatilmii",
+  storageBucket: "okultatilmii.firebasestorage.app",
+  messagingSenderId: "344360216763",
+  appId: "1:344360216763:web:cf122cbc2ede02674ee19e",
+  measurementId: "G-S1DTEM1SQT",
+  vapidKey: "BFEeBCfxNrZ-3aCmGOhiq_RO-NnnvMd462sxgnYH099j4o-uZ7gUmg5e2uWAtntSs-Ok0cMYN17UY73nrBdmoYw"
 };
 
 // MEB Okul Tatilleri (Milli Eğitim Bakanlığı verileri her yıl değiştiği için manuel eklenir)

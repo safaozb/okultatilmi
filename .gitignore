@@ -1,7 +1,3 @@
-# Firebase config ve gizli dosyalar
-public/js/config.js
-js/config.js
-
 # Firebase önbellek ve modül dosyaları
 .firebase/
 node_modules/
