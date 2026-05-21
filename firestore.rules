@@ -1,27 +1,45 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Özel Tatiller: Herkes okuyabilir, SADECE giriş yapmış (yetkili) kullanıcılar yazabilir/silebilir
-    match /custom_holidays/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
+    
+    // Yalnızca giriş yapmış (oturum açmış) kullanıcıların Admin sayılması için kural
+    function isAdmin() {
+      return request.auth != null;
     }
 
-    // Ziyaretçi Sayacı: Herkes okuyabilir ve sayacı artırmak için yazabilir
+    // Özel Tatiller: Herkes okuyabilir, sadece admin ekleyip/silebilir
+    match /custom_holidays/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Site İstatistikleri: Ziyaretçi sayaçları için herkesin okuyup yazmasına (increment) izin ver
     match /site_stats/{document=**} {
       allow read, write: if true;
     }
 
-    // Push Bildirim Tokenları: Herkes kendi tokenını yazabilir
-    match /fcm_tokens/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if true;
+    // Site Ayarları (Duyuru Bandı vb.): Herkes okuyabilir, sadece admin değiştirebilir
+    match /site_settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // Bildirim Gönderme İstekleri: Sadece admin tetikleyebilir
+    // FCM Bildirim Token'ları: Ziyaretçiler token oluşturabilir, sadece admin okuyabilir
+    match /fcm_tokens/{token} {
+      allow create, update: if true;
+      allow read, delete: if isAdmin();
+    }
+
+    // Site İçi Geçmiş Bildirimler: Herkes okuyabilir, sadece admin gönderebilir/silebilir
+    match /site_notifications/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Push Bildirim İstekleri: Sadece admin bildirim isteği (push) atabilir
     match /notification_requests/{document=**} {
-      allow read, write: if request.auth != null;
+      allow create, read, update, delete: if isAdmin();
     }
   }
 }

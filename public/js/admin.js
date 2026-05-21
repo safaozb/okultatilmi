@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, getDoc, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { firebaseConfig, initialHolidays } from "./config.js";
 
 const app = initializeApp(firebaseConfig);
@@ -28,7 +28,13 @@ let adminHidePastHolidays = localStorage.getItem('admin-hide-past') === 'true';
 let visitorUnsubscribe = null;
 let dailyVisitorUnsubscribe = null;
 let visitorChart = null;
+let hourlyChart = null;
 let subscribersUnsubscribe = null;
+let announcementUnsubscribe = null;
+let siteNotificationsUnsubscribe = null;
+
+// Tüm şehirler listesi (Genel kullanım için en üste alındı)
+const citiesList = ["Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"];
 
 async function fetchSystemHolidays() {
     const currentYear = new Date().getFullYear();
@@ -57,6 +63,17 @@ async function fetchSystemHolidays() {
 
     const configHols = initialHolidays.map((h, i) => ({...h, id: 'config-'+i, isSystem: true}));
     systemHolidaysData = [...configHols, ...apiHolidays];
+}
+
+// --- ŞEHİR SEÇİMİ (DROPDOWN DOLDURMA) ---
+const pushCitySelect = document.getElementById('push-city');
+if (pushCitySelect && typeof citiesList !== 'undefined') {
+    citiesList.forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        pushCitySelect.appendChild(opt);
+    });
 }
 
 // --- GRAFİK (CHART.JS) SİSTEMİ ---
@@ -93,15 +110,15 @@ async function loadChartData() {
                 datasets: [{
                     label: 'Ziyaretçi Sayısı',
                     data: data,
-                    borderColor: '#818cf8', // indigo-400
-                    backgroundColor: 'rgba(129, 140, 248, 0.15)',
+                    borderColor: '#94a3b8', // slate-400
+                    backgroundColor: 'rgba(148, 163, 184, 0.15)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#6366f1', // indigo-500
-                    pointBorderColor: '#1e293b', // slate-800
+                    pointBackgroundColor: '#64748b', // slate-500
+                    pointBorderColor: '#1e293b', 
                     pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: '#6366f1',
+                    pointHoverBorderColor: '#94a3b8',
                     pointRadius: 4,
                     pointHoverRadius: 6
                 }]
@@ -135,6 +152,82 @@ async function loadChartData() {
         });
     } catch (error) {
         console.error("Grafik verileri çekilemedi:", error);
+    }
+}
+
+// --- SAATLİK GRAFİK (CHART.JS) SİSTEMİ ---
+async function loadHourlyChartData() {
+    const labels = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+    const data = new Array(24).fill(0);
+    const todayStr = new Date().toISOString().split('T')[0];
+    const promises = [];
+
+    // 24 saatin verilerini asenkron olarak paralel çekiyoruz
+    for (let i = 0; i < 24; i++) {
+        promises.push(getDoc(doc(db, "site_stats", `hourly_${todayStr}_${i}`)));
+    }
+
+    try {
+        const results = await Promise.all(promises);
+        results.forEach((snap, i) => {
+            data[i] = snap.exists() ? snap.data().count : 0;
+        });
+
+        const ctx = document.getElementById('hourly-visitor-chart');
+        if (!ctx) return;
+
+        if (hourlyChart) {
+            hourlyChart.destroy();
+        }
+
+        hourlyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ziyaretçi Sayısı',
+                    data: data,
+                    backgroundColor: '#64748b', // slate-500
+                    hoverBackgroundColor: '#94a3b8', // slate-400
+                    borderRadius: 6,
+                    borderWidth: 0,
+                    barPercentage: 0.7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f1f5f9',
+                        bodyColor: '#f1f5f9',
+                        padding: 10,
+                        displayColors: false,
+                        cornerRadius: 8,
+                        callbacks: {
+                            title: function(context) {
+                                return `${context[0].label} - ${String(parseInt(context[0].label) + 1).padStart(2, '0')}:00 Arası`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#334155', drawBorder: false },
+                        ticks: { color: '#94a3b8', precision: 0 }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 0 }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Saatlik grafik verileri çekilemedi:", error);
     }
 }
 
@@ -197,11 +290,11 @@ function renderAdminCalendar() {
         let dayClass = "w-8 h-8 sm:w-10 sm:h-10 mx-auto flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer relative font-medium ";
         
         if (isSelectedStart || isSelectedEnd) {
-            dayClass += "bg-indigo-600 text-white shadow-md shadow-indigo-500/30 scale-110 z-10 border-2 border-indigo-400";
+            dayClass += "bg-slate-600 text-white shadow-md shadow-black/20 scale-110 z-10 border-2 border-slate-400";
         } else if (isInRange) {
-            dayClass += "bg-indigo-500/20 text-indigo-300";
+            dayClass += "bg-slate-700/50 text-slate-300";
         } else if (isHolidayDate) {
-            dayClass += "bg-rose-500/20 text-rose-300 border border-rose-500/30";
+            dayClass += "bg-slate-800 border border-slate-600 text-slate-400";
         } else {
             dayClass += "text-slate-300 hover:bg-slate-700";
         }
@@ -363,6 +456,50 @@ if (confirmDeleteBtn) {
     });
 }
 
+// --- BİLDİRİM SİLME MODALI SİSTEMİ ---
+const deleteNotificationModal = document.getElementById("delete-notification-modal");
+const deleteNotificationBackdrop = document.getElementById("delete-notification-modal-backdrop");
+const deleteNotificationContent = document.getElementById("delete-notification-modal-content");
+const cancelDeleteNotificationBtn = document.getElementById("cancel-delete-notification-btn");
+const confirmDeleteNotificationBtn = document.getElementById("confirm-delete-notification-btn");
+const confirmDeleteNotificationText = document.getElementById("confirm-delete-notification-text");
+const confirmDeleteNotificationSpinner = document.getElementById("confirm-delete-notification-spinner");
+
+let notificationIdToDelete = null;
+let deleteNotificationTargetBtn = null;
+
+function openDeleteNotificationModal(id, btnElement) {
+    notificationIdToDelete = id;
+    deleteNotificationTargetBtn = btnElement;
+    deleteNotificationModal.classList.remove("hidden");
+    deleteNotificationModal.classList.add("flex");
+    setTimeout(() => {
+        deleteNotificationBackdrop.classList.remove("opacity-0");
+        deleteNotificationBackdrop.classList.add("opacity-100");
+        deleteNotificationContent.classList.remove("scale-95", "opacity-0");
+        deleteNotificationContent.classList.add("scale-100", "opacity-100");
+    }, 10);
+}
+
+function closeDeleteNotificationModal() {
+    deleteNotificationBackdrop.classList.remove("opacity-100");
+    deleteNotificationBackdrop.classList.add("opacity-0");
+    deleteNotificationContent.classList.remove("scale-100", "opacity-100");
+    deleteNotificationContent.classList.add("scale-95", "opacity-0");
+    setTimeout(() => {
+        deleteNotificationModal.classList.add("hidden");
+        deleteNotificationModal.classList.remove("flex");
+        notificationIdToDelete = null;
+        deleteNotificationTargetBtn = null;
+        confirmDeleteNotificationBtn.disabled = false;
+        confirmDeleteNotificationText.textContent = "Evet, Kaldır";
+        confirmDeleteNotificationSpinner.classList.add("hidden");
+        confirmDeleteNotificationBtn.classList.remove("cursor-not-allowed", "opacity-75");
+    }, 300);
+}
+
+if (cancelDeleteNotificationBtn) cancelDeleteNotificationBtn.addEventListener("click", closeDeleteNotificationModal);
+
 // Şifre Göster/Gizle Mantığı
 const togglePasswordBtn = document.getElementById("toggle-password");
 const passwordInput = document.getElementById("password");
@@ -449,7 +586,73 @@ onAuthStateChanged(auth, async (user) => {
             if (el) el.textContent = snapshot.size.toLocaleString('tr-TR');
         });
 
+        // Canlı Duyuru Durumunu Çek
+        announcementUnsubscribe = onSnapshot(doc(db, "site_settings", "announcement"), (docSnap) => {
+            if (docSnap.exists()) {
+                document.getElementById('announcement-text').value = docSnap.data().text || "";
+                document.getElementById('announcement-active').checked = docSnap.data().isActive || false;
+            }
+        });
+
+        // Sitedeki Geçmiş Bildirimleri Çek ve Listele
+        siteNotificationsUnsubscribe = onSnapshot(query(collection(db, "site_notifications"), orderBy("timestamp", "desc")), (snapshot) => {
+            const list = document.getElementById("admin-notifications-list");
+            if (!list) return;
+            if (snapshot.empty) {
+                list.innerHTML = '<p class="text-sm font-medium text-slate-500 text-center py-6">Sitede gösterilen bildirim yok.</p>';
+                return;
+            }
+            list.innerHTML = "";
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                const cityBadge = data.targetCity && data.targetCity !== 'all' ? `<span class="bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded text-[10px] ml-2 border border-indigo-500/30">📍 ${data.targetCity}</span>` : `<span class="bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] ml-2">🌍 Tüm Türkiye</span>`;
+                list.innerHTML += `
+                    <div class="flex justify-between items-start bg-slate-700/30 border border-slate-600/50 p-3 rounded-xl hover:border-slate-500 transition-colors group">
+                        <div class="pr-2">
+                            <h4 class="text-sm font-bold text-slate-200 flex items-center">${data.title} ${cityBadge}</h4>
+                            <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">${data.body}</p>
+                            <span class="text-[10px] text-slate-500 mt-2 block font-medium">${data.dateStr}</span>
+                        </div>
+                        <button data-id="${docSnap.id}" class="delete-notification-btn p-2 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 rounded-lg transition-colors shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100" title="Siteden Kaldır">
+                            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                `;
+            });
+            document.querySelectorAll('.delete-notification-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    openDeleteNotificationModal(id, e.currentTarget);
+                });
+            });
+        });
+
+        if (confirmDeleteNotificationBtn) {
+            // Yalnızca admin oturumu açıkken bağlamak için
+            // (Bir kere bağlanmasını sağlamak adına dışarıda tanımlayıp id referansıyla tetikletiyoruz)
+            confirmDeleteNotificationBtn.onclick = async () => {
+                if (!notificationIdToDelete) return;
+                confirmDeleteNotificationBtn.disabled = true;
+                confirmDeleteNotificationBtn.classList.add("cursor-not-allowed", "opacity-75");
+                confirmDeleteNotificationText.textContent = "Kaldırılıyor...";
+                confirmDeleteNotificationSpinner.classList.remove("hidden");
+                if (deleteNotificationTargetBtn) deleteNotificationTargetBtn.disabled = true;
+                
+                try {
+                    await deleteDoc(doc(db, "site_notifications", notificationIdToDelete));
+                    showToast("Bildirim siteden kaldırıldı.", "success");
+                    closeDeleteNotificationModal();
+                } catch (error) {
+                    showToast("Bildirim silinirken bir hata oluştu.", "error");
+                    console.error(error);
+                    closeDeleteNotificationModal();
+                    if (deleteNotificationTargetBtn) deleteNotificationTargetBtn.disabled = false;
+                }
+            };
+        }
+
         loadChartData(); // Grafiği yükle
+        loadHourlyChartData(); // Saatlik grafiği yükle
         resetInactivityTimer(); // Giriş yapıldığında süreyi başlat
     } else {
         loginSection.classList.remove("hidden");
@@ -471,9 +674,21 @@ onAuthStateChanged(auth, async (user) => {
             subscribersUnsubscribe();
             subscribersUnsubscribe = null;
         }
+        if (announcementUnsubscribe) {
+            announcementUnsubscribe();
+            announcementUnsubscribe = null;
+        }
+        if (siteNotificationsUnsubscribe) {
+            siteNotificationsUnsubscribe();
+            siteNotificationsUnsubscribe = null;
+        }
         if (visitorChart) {
             visitorChart.destroy();
             visitorChart = null;
+        }
+        if (hourlyChart) {
+            hourlyChart.destroy();
+            hourlyChart = null;
         }
         clearTimeout(inactivityTimer); // Çıkış yapıldığında sayacı durdur
     }
@@ -560,10 +775,13 @@ function renderHolidays(holidays) {
                     ${holiday.name} 
                     ${holiday.isSystem ? '<span class="text-[9px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded tracking-wide">SİSTEM</span>' : ''}
                     ${isPastHoliday ? '<span class="text-[9px] bg-rose-900/80 text-rose-300 px-1.5 py-0.5 rounded tracking-wide border border-rose-700/50">GEÇMİŞ</span>' : ''}
+                    ${holiday.status === 'cancelled' ? '<span class="text-[9px] bg-rose-900/80 text-rose-300 px-1.5 py-0.5 rounded tracking-wide border border-rose-700/50">İPTAL EDİLDİ</span>' : ''}
+                    ${holiday.status === 'postponed' ? '<span class="text-[9px] bg-amber-900/80 text-amber-300 px-1.5 py-0.5 rounded tracking-wide border border-amber-700/50">ERTELENDİ</span>' : ''}
                 </h4>
                 <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                    <span class="inline-block w-2 h-2 rounded-full ${holiday.type === 'meb' ? 'bg-indigo-400' : 'bg-rose-400'}"></span>
+                    <span class="inline-block w-2 h-2 rounded-full bg-slate-500"></span>
                     <span class="font-medium">${holiday.start} / ${holiday.end}</span>
+                    ${holiday.city && holiday.city !== 'genel' ? `<span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded border border-slate-600">📍 ${holiday.city}</span>` : ''}
                     <span class="text-slate-500">(${holiday.duration})</span>
                 </div>
             </div>
@@ -590,11 +808,20 @@ function renderHolidays(holidays) {
             }
 
             if (holiday) {
+                // Mevcut vurguyu kaldır, yenisini ekle
+                document.querySelectorAll('.is-editing').forEach(el => el.classList.remove('is-editing', 'ring-2', 'ring-slate-500'));
+                const listItem = e.target.closest('.group');
+                if (listItem) listItem.classList.add('is-editing', 'ring-2', 'ring-slate-500');
+
                 document.getElementById("h-name").value = holiday.name;
                 document.getElementById("h-start").value = holiday.start;
                 document.getElementById("h-end").value = holiday.end;
                 document.getElementById("h-duration").value = holiday.duration;
                 document.getElementById("h-type").value = holiday.type;
+                if (document.getElementById("h-status")) document.getElementById("h-status").value = holiday.status || "active";
+                if (typeof setAdminCityDropdownValue === 'function') {
+                    setAdminCityDropdownValue(holiday.city || "genel");
+                }
 
                 selectedStartDate = holiday.start;
                 selectedEndDate = holiday.end;
@@ -699,7 +926,9 @@ addHolidayForm.addEventListener("submit", async (e) => {
         start: document.getElementById("h-start").value,
         end: document.getElementById("h-end").value,
         duration: document.getElementById("h-duration").value,
-        type: document.getElementById("h-type").value
+        type: document.getElementById("h-type").value,
+        status: document.getElementById("h-status") ? document.getElementById("h-status").value : "active",
+        city: document.getElementById("h-city") ? document.getElementById("h-city").value : "genel"
     };
     
     if (overrideSystemStart) {
@@ -733,33 +962,224 @@ addHolidayForm.addEventListener("reset", () => {
     editHolidayId = null;
     overrideSystemStart = null;
     const submitSpan = addHolidayForm.querySelector("button[type='submit'] span");
+    
+    document.querySelectorAll('.is-editing').forEach(el => el.classList.remove('is-editing', 'ring-2', 'ring-slate-500'));
+
     if (submitSpan) submitSpan.textContent = "Tatili Kaydet ve Yayınla";
+    if (typeof setAdminCityDropdownValue === 'function') setAdminCityDropdownValue('genel');
 });
 
-// --- BİLDİRİM (PUSH) GÖNDERME İSTEĞİ ---
+// --- BİLDİRİM (PUSH) GÖNDERME İSTEĞİ (MODAL SİSTEMİ) ---
 const sendPushBtn = document.getElementById('send-push-btn');
-if (sendPushBtn) {
-    sendPushBtn.addEventListener('click', async () => {
-        if(!confirm("DİKKAT: Sitedeki tüm kullanıcılara anlık bildirim gidecek! Onaylıyor musunuz?")) return;
+const pushModal = document.getElementById('push-modal');
+const pushBackdrop = document.getElementById('push-modal-backdrop');
+const pushContent = document.getElementById('push-modal-content');
+const cancelPushBtn = document.getElementById('cancel-push-btn');
+const confirmPushBtn = document.getElementById('confirm-push-btn');
+const pushTitleInput = document.getElementById('push-title');
+const pushBodyInput = document.getElementById('push-body');
+const confirmPushText = document.getElementById('confirm-push-text');
+const confirmPushSpinner = document.getElementById('confirm-push-spinner');
 
-        const originalText = sendPushBtn.innerHTML;
-        sendPushBtn.disabled = true;
-        sendPushBtn.textContent = "Gönderiliyor...";
+function openPushModal() {
+    pushTitleInput.value = "";
+    pushBodyInput.value = "";
+    if (pushCitySelect) pushCitySelect.value = "all";
+    pushModal.classList.remove("hidden");
+    pushModal.classList.add("flex");
+    
+    setTimeout(() => {
+        pushBackdrop.classList.remove("opacity-0");
+        pushBackdrop.classList.add("opacity-100");
+        pushContent.classList.remove("scale-95", "opacity-0");
+        pushContent.classList.add("scale-100", "opacity-100");
+    }, 10);
+}
+
+function closePushModal() {
+    pushBackdrop.classList.remove("opacity-100");
+    pushBackdrop.classList.add("opacity-0");
+    pushContent.classList.remove("scale-100", "opacity-100");
+    pushContent.classList.add("scale-95", "opacity-0");
+    
+    setTimeout(() => {
+        pushModal.classList.add("hidden");
+        pushModal.classList.remove("flex");
+        
+        confirmPushBtn.disabled = false;
+        confirmPushText.textContent = "Bildirimi Gönder";
+        confirmPushSpinner.classList.add("hidden");
+        confirmPushBtn.classList.remove("cursor-not-allowed", "opacity-75");
+    }, 300);
+}
+
+if (sendPushBtn) {
+    sendPushBtn.addEventListener('click', openPushModal);
+}
+
+if (cancelPushBtn) {
+    cancelPushBtn.addEventListener('click', closePushModal);
+}
+
+if (confirmPushBtn) {
+    confirmPushBtn.addEventListener('click', async () => {
+        const title = pushTitleInput.value.trim();
+        const body = pushBodyInput.value.trim();
+
+        if (!title || !body) {
+            showToast("Lütfen bildirim başlığı ve içeriğini doldurun.", "warning");
+            return;
+        }
+
+        confirmPushBtn.disabled = true;
+        confirmPushBtn.classList.add("cursor-not-allowed", "opacity-75");
+        confirmPushText.textContent = "Gönderiliyor...";
+        confirmPushSpinner.classList.remove("hidden");
+
+        const pushSendDeviceCheckbox = document.getElementById('push-send-device');
+        const sendToDevice = pushSendDeviceCheckbox ? pushSendDeviceCheckbox.checked : true;
+        const targetCity = pushCitySelect ? pushCitySelect.value : "all";
 
         try {
-            await addDoc(collection(db, "notification_requests"), {
-                title: "🔔 SON DAKİKA: Tatil Duyurusu!",
-                body: "Yarın okullar tatil edildi. Detaylar ve güncel takvim için hemen tıklayın!",
-                timestamp: new Date().toISOString(),
-                status: "pending"
+            if (sendToDevice) {
+                await addDoc(collection(db, "notification_requests"), {
+                    title: title,
+                    body: body,
+                    targetCity: targetCity,
+                    timestamp: new Date().toISOString(),
+                    status: "pending"
+                });
+            }
+            
+            // Ana sayfadaki kalıcı listeye (Sitedeki Bildirimler) ekle
+            await addDoc(collection(db, "site_notifications"), {
+                title: title,
+                body: body,
+                targetCity: targetCity,
+                timestamp: new Date().getTime(),
+                dateStr: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
             });
-            showToast("Bildirim sıraya alındı! (Cloud Function gerektirir)", "success");
+            
+            showToast(sendToDevice ? "Bildirim cihazlara gönderildi ve siteye eklendi!" : "Bildirim sadece siteye eklendi!", "success");
+            closePushModal();
         } catch (err) {
             showToast("Bildirim isteği oluşturulamadı.", "error");
-        } finally {
-            sendPushBtn.disabled = false;
-            sendPushBtn.innerHTML = originalText;
+            confirmPushBtn.disabled = false;
+            confirmPushBtn.classList.remove("cursor-not-allowed", "opacity-75");
+            confirmPushText.textContent = "Bildirimi Gönder";
+            confirmPushSpinner.classList.add("hidden");
         }
+    });
+}
+
+// --- CANLI DUYURU (MARQUEE) KAYDETME İŞLEMİ ---
+const saveAnnouncementBtn = document.getElementById('save-announcement-btn');
+if (saveAnnouncementBtn) {
+    saveAnnouncementBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const text = document.getElementById('announcement-text').value.trim();
+        const isActive = document.getElementById('announcement-active').checked;
+
+        saveAnnouncementBtn.disabled = true;
+        saveAnnouncementBtn.textContent = "Kyd...";
+
+        try {
+            await setDoc(doc(db, "site_settings", "announcement"), { text: text, isActive: isActive }, { merge: true });
+            showToast("Duyuru yayına alındı!", "success");
+        } catch (err) {
+            showToast("Duyuru kaydedilemedi.", "error");
+            console.error(err);
+        } finally {
+            saveAnnouncementBtn.disabled = false;
+            saveAnnouncementBtn.textContent = "Kaydet";
+        }
+    });
+}
+
+const adminCityContainer = document.getElementById('admin-city-dropdown-container');
+const adminCityBtn = document.getElementById('admin-city-dropdown-btn');
+const adminCityText = document.getElementById('admin-city-dropdown-text');
+const adminCityMenu = document.getElementById('admin-city-dropdown-menu');
+const adminCitySearch = document.getElementById('admin-city-dropdown-search');
+const adminCityList = document.getElementById('admin-city-dropdown-list');
+const hCityInput = document.getElementById('h-city');
+
+const adminCityOptions = [{ value: 'genel', label: '🌍 Tüm Türkiye (Genel)' }, ...citiesList.map(c => ({ value: c, label: c }))];
+
+function setAdminCityDropdownValue(val) {
+    if (!hCityInput) return;
+    const opt = adminCityOptions.find(o => o.value === val) || adminCityOptions[0];
+    hCityInput.value = opt.value;
+    if (adminCityText) adminCityText.textContent = opt.label;
+}
+
+if (adminCityContainer) {
+    const renderAdminDropdownOptions = (searchTerm = "") => {
+        adminCityList.innerHTML = "";
+        const filtered = adminCityOptions.filter(opt => opt.label.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        if (filtered.length === 0) {
+            adminCityList.innerHTML = `<li class="px-4 py-2.5 text-slate-500 text-center">Sonuç bulunamadı</li>`;
+            return;
+        }
+
+            const fragment = document.createDocumentFragment();
+        filtered.forEach(opt => {
+            const li = document.createElement('li');
+            const isSelected = hCityInput.value === opt.value;
+            li.className = `px-4 py-2.5 cursor-pointer hover:bg-slate-600/50 text-slate-300 transition-colors ${isSelected ? 'bg-slate-600 text-white font-bold' : ''}`;
+            li.textContent = opt.label;
+                li.dataset.value = opt.value;
+                fragment.appendChild(li);
+        });
+            adminCityList.appendChild(fragment);
+    };
+
+    const closeAdminDropdown = () => {
+        adminCityMenu.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => {
+            adminCityMenu.classList.add('hidden');
+            adminCityMenu.classList.remove('flex');
+        }, 150);
+    };
+
+    const openAdminDropdown = () => {
+        adminCitySearch.value = "";
+        renderAdminDropdownOptions();
+        adminCityMenu.classList.remove('hidden');
+        adminCityMenu.classList.add('flex');
+        requestAnimationFrame(() => {
+            adminCityMenu.classList.remove('opacity-0', '-translate-y-2');
+            adminCitySearch.focus();
+        });
+    };
+
+    adminCityBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (adminCityMenu.classList.contains('hidden')) openAdminDropdown();
+        else closeAdminDropdown();
+    });
+
+    // Event Delegation (Her li elemanı yerine parent üzerinden dinleme)
+    adminCityList.addEventListener('click', (e) => {
+        const li = e.target.closest('li[data-value]');
+        if (!li) return;
+        setAdminCityDropdownValue(li.dataset.value);
+        closeAdminDropdown();
+    });
+
+    let adminSearchTimeout;
+    adminCitySearch.addEventListener('input', (e) => {
+        const val = e.target.value; // Değeri senkron olarak güvenceye alıyoruz
+        clearTimeout(adminSearchTimeout);
+        adminSearchTimeout = setTimeout(() => {
+            renderAdminDropdownOptions(val);
+        }, 150);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!adminCityContainer.contains(e.target)) closeAdminDropdown();
     });
 }
 
@@ -804,26 +1224,244 @@ if (hEndInput) hEndInput.addEventListener("change", (e) => {
 // --- SEKME (TAB) GEÇİŞLERİ ---
 const tabHolidays = document.getElementById("tab-holidays");
 const tabStats = document.getElementById("tab-stats");
+const tabWeather = document.getElementById("tab-weather");
+const tabNotifications = document.getElementById("tab-notifications");
 const sectionHolidays = document.getElementById("section-holidays");
 const sectionStats = document.getElementById("section-stats");
+const sectionWeather = document.getElementById("section-weather");
+const sectionNotifications = document.getElementById("section-notifications");
 
-if (tabHolidays && tabStats) {
-    tabHolidays.addEventListener("click", () => {
-        tabHolidays.className = "pb-3 text-sm font-semibold text-indigo-400 border-b-2 border-indigo-400 focus:outline-none transition-all";
-        tabStats.className = "pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent hover:border-slate-600 focus:outline-none transition-all";
+function switchAdminTab(activeTab, activeSection) {
+    const tabs = [tabHolidays, tabStats, tabWeather, tabNotifications];
+    const sections = [sectionHolidays, sectionStats, sectionWeather, sectionNotifications];
+    
+    tabs.forEach(t => {
+        if (t) t.className = "pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent hover:border-slate-600 focus:outline-none transition-all";
+    });
+    sections.forEach(s => {
+        if (s) s.classList.add("hidden");
+    });
+    
+    if (activeTab) activeTab.className = "pb-3 text-sm font-semibold text-slate-100 border-b-2 border-slate-100 focus:outline-none transition-all";
+    if (activeSection) activeSection.classList.remove("hidden");
+}
+
+if (tabHolidays) tabHolidays.addEventListener("click", () => switchAdminTab(tabHolidays, sectionHolidays));
+if (tabStats) tabStats.addEventListener("click", () => switchAdminTab(tabStats, sectionStats));
+if (tabWeather) tabWeather.addEventListener("click", () => {
+    switchAdminTab(tabWeather, sectionWeather);
+    if (typeof loadAdminWeather === "function" && !window.adminWeatherLoaded) {
+        loadAdminWeather();
+    }
+});
+if (tabNotifications) tabNotifications.addEventListener("click", () => switchAdminTab(tabNotifications, sectionNotifications));
+
+// --- METEOROLOJİ (HAVA DURUMU) İZLEME PANELİ ---
+window.adminWeatherLoaded = false;
+const adminCityCoords = [
+    { name: "Adana", lat: 37.00, lon: 35.32 }, { name: "Adıyaman", lat: 37.76, lon: 38.27 },
+    { name: "Afyonkarahisar", lat: 38.75, lon: 30.53 }, { name: "Ağrı", lat: 39.71, lon: 43.05 },
+    { name: "Amasya", lat: 40.64, lon: 35.83 }, { name: "Ankara", lat: 39.93, lon: 32.86 },
+    { name: "Antalya", lat: 36.90, lon: 30.71 }, { name: "Artvin", lat: 41.18, lon: 41.82 },
+    { name: "Aydın", lat: 37.84, lon: 27.85 }, { name: "Balıkesir", lat: 39.65, lon: 27.88 },
+    { name: "Bilecik", lat: 40.15, lon: 29.98 }, { name: "Bingöl", lat: 38.88, lon: 40.49 },
+    { name: "Bitlis", lat: 38.40, lon: 42.11 }, { name: "Bolu", lat: 40.74, lon: 31.61 },
+    { name: "Burdur", lat: 37.72, lon: 30.28 }, { name: "Bursa", lat: 40.18, lon: 29.07 },
+    { name: "Çanakkale", lat: 40.16, lon: 26.41 }, { name: "Çankırı", lat: 40.60, lon: 33.61 },
+    { name: "Çorum", lat: 40.55, lon: 34.96 }, { name: "Denizli", lat: 37.78, lon: 29.09 },
+    { name: "Diyarbakır", lat: 37.91, lon: 40.23 }, { name: "Edirne", lat: 41.68, lon: 26.56 },
+    { name: "Elazığ", lat: 38.68, lon: 39.23 }, { name: "Erzincan", lat: 39.75, lon: 39.50 },
+    { name: "Erzurum", lat: 39.90, lon: 41.27 }, { name: "Eskişehir", lat: 39.78, lon: 30.52 },
+    { name: "Gaziantep", lat: 37.07, lon: 37.38 }, { name: "Giresun", lat: 40.91, lon: 38.39 },
+    { name: "Gümüşhane", lat: 40.46, lon: 39.48 }, { name: "Hakkâri", lat: 37.57, lon: 43.74 },
+    { name: "Hatay", lat: 36.40, lon: 36.35 }, { name: "Isparta", lat: 37.76, lon: 30.56 },
+    { name: "Mersin", lat: 36.81, lon: 34.64 }, { name: "İstanbul", lat: 41.01, lon: 28.98 },
+    { name: "İzmir", lat: 38.42, lon: 27.14 }, { name: "Kars", lat: 40.60, lon: 43.09 },
+    { name: "Kastamonu", lat: 41.38, lon: 33.78 }, { name: "Kayseri", lat: 38.72, lon: 35.48 },
+    { name: "Kırklareli", lat: 41.74, lon: 27.23 }, { name: "Kırşehir", lat: 39.15, lon: 34.16 },
+    { name: "Kocaeli", lat: 40.85, lon: 29.88 }, { name: "Konya", lat: 37.87, lon: 32.49 },
+    { name: "Kütahya", lat: 39.42, lon: 29.99 }, { name: "Malatya", lat: 38.36, lon: 38.31 },
+    { name: "Manisa", lat: 38.62, lon: 27.43 }, { name: "K.maraş", lat: 37.58, lon: 36.92 },
+    { name: "Mardin", lat: 37.31, lon: 40.74 }, { name: "Muğla", lat: 37.22, lon: 28.36 },
+    { name: "Muş", lat: 38.74, lon: 41.49 }, { name: "Nevşehir", lat: 38.62, lon: 34.71 },
+    { name: "Niğde", lat: 37.97, lon: 34.68 }, { name: "Ordu", lat: 40.99, lon: 37.88 },
+    { name: "Rize", lat: 41.02, lon: 40.52 }, { name: "Sakarya", lat: 40.77, lon: 30.39 },
+    { name: "Samsun", lat: 41.29, lon: 36.33 }, { name: "Siirt", lat: 37.93, lon: 41.95 },
+    { name: "Sinop", lat: 42.02, lon: 35.15 }, { name: "Sivas", lat: 39.75, lon: 37.02 },
+    { name: "Tekirdağ", lat: 40.98, lon: 27.51 }, { name: "Tokat", lat: 40.32, lon: 36.55 },
+    { name: "Trabzon", lat: 41.00, lon: 39.72 }, { name: "Tunceli", lat: 39.11, lon: 39.55 },
+    { name: "Şanlıurfa", lat: 37.16, lon: 38.80 }, { name: "Uşak", lat: 38.67, lon: 29.41 },
+    { name: "Van", lat: 38.50, lon: 43.37 }, { name: "Yozgat", lat: 39.82, lon: 34.80 },
+    { name: "Zonguldak", lat: 41.46, lon: 31.80 }, { name: "Aksaray", lat: 38.37, lon: 34.04 },
+    { name: "Bayburt", lat: 40.26, lon: 40.23 }, { name: "Karaman", lat: 37.18, lon: 33.22 },
+    { name: "Kırıkkale", lat: 39.84, lon: 33.51 }, { name: "Batman", lat: 37.88, lon: 41.14 },
+    { name: "Şırnak", lat: 37.52, lon: 42.45 }, { name: "Bartın", lat: 41.64, lon: 32.34 },
+    { name: "Ardahan", lat: 41.11, lon: 42.70 }, { name: "Iğdır", lat: 39.92, lon: 44.05 },
+    { name: "Yalova", lat: 40.65, lon: 29.27 }, { name: "Karabük", lat: 41.20, lon: 32.62 },
+    { name: "Kilis", lat: 36.72, lon: 37.11 }, { name: "Osmaniye", lat: 37.07, lon: 36.25 },
+    { name: "Düzce", lat: 40.84, lon: 31.16 }
+];
+
+let weatherDataCache = [];
+let currentWeatherFilter = 'all';
+let currentWeatherSearch = '';
+
+function getAdminWeatherInfo(code) {
+    if (code === 0) return { text: 'Güneşli', emoji: '☀️', isBad: false };
+    if ([1, 2].includes(code)) return { text: 'Bulutlu', emoji: '⛅', isBad: false };
+    if (code === 3) return { text: 'Ç. Bulutlu', emoji: '☁️', isBad: false };
+    if ([45, 48].includes(code)) return { text: 'Sisli', emoji: '🌫️', isBad: false };
+    if ([51, 53, 55, 56, 57].includes(code)) return { text: 'Çisenti', emoji: '🌦️', isBad: false };
+    if ([61, 63, 65, 80, 81, 82].includes(code)) return { text: 'Yağmurlu', emoji: '🌧️', isBad: false };
+    if ([71, 73, 75, 77, 85, 86].includes(code)) return { text: 'Kar', emoji: '❄️', isBad: true };
+    if ([95, 96, 99].includes(code)) return { text: 'Fırtına', emoji: '⛈️', isBad: true };
+    return { text: 'Bilinmiyor', emoji: '🌍', isBad: false };
+}
+
+async function loadAdminWeather() {
+    window.adminWeatherLoaded = true;
+    const grid = document.getElementById("weather-grid");
+    const btn = document.getElementById("refresh-weather-btn");
+    if (!grid) return;
+
+    if (btn) {
+        btn.innerHTML = `<svg class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Yenileniyor...`;
+        btn.disabled = true;
+    }
+
+    grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400 flex flex-col items-center"><svg class="animate-spin h-8 w-8 text-slate-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p>Türkiye geneli hava durumu verileri yükleniyor...</p></div>`;
+
+    const lats = adminCityCoords.map(c => c.lat).join(',');
+    const lons = adminCityCoords.map(c => c.lon).join(',');
+    
+    try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,weather_code`);
+        if (!res.ok) {
+            throw new Error(`API Hatası (Sunucu çok yoğun olabilir): ${res.status}`);
+        }
+        const data = await res.json();
+
+        grid.innerHTML = "";
+        const results = Array.isArray(data) ? data : [data];
         
-        sectionHolidays.classList.remove("hidden");
-        sectionStats.classList.add("hidden");
+        weatherDataCache = adminCityCoords.map((city, index) => {
+            const currentData = results[index]?.current || {};
+            const temp = currentData.temperature_2m !== undefined ? Math.round(currentData.temperature_2m) : null;
+            const code = currentData.weather_code !== undefined ? currentData.weather_code : -1;
+            const info = getAdminWeatherInfo(code);
+            return { ...city, temp, code, info };
+        });
+
+        renderAdminWeather();
+    } catch (error) {
+        console.error("Hava durumu çekilemedi:", error);
+        grid.innerHTML = `<div class="col-span-full text-center text-rose-400 py-6 font-medium">Veriler alınırken bir hata oluştu. Lütfen tekrar deneyin.</div>`;
+    } finally {
+        if (btn) {
+            btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Yenile`;
+            btn.disabled = false;
+        }
+    }
+}
+
+function renderAdminWeather() {
+    const grid = document.getElementById("weather-grid");
+    if (!grid) return;
+
+    const filtered = weatherDataCache.filter(item => {
+        const matchSearch = item.name.toLowerCase().includes(currentWeatherSearch.toLowerCase());
+        const matchFilter = currentWeatherFilter === 'all' || (currentWeatherFilter === 'alert' && item.info.isBad);
+        return matchSearch && matchFilter;
     });
 
-    tabStats.addEventListener("click", () => {
-        tabStats.className = "pb-3 text-sm font-semibold text-indigo-400 border-b-2 border-indigo-400 focus:outline-none transition-all";
-        tabHolidays.className = "pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent hover:border-slate-600 focus:outline-none transition-all";
-        
-        sectionStats.classList.remove("hidden");
-        sectionHolidays.classList.add("hidden");
+    const alertCount = weatherDataCache.filter(item => item.info.isBad).length;
+    const countEl = document.getElementById("weather-alert-count");
+    if (countEl) countEl.textContent = alertCount;
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 font-medium bg-slate-800/50 rounded-xl border border-slate-700/50">Arama kriterlerine uygun şehir bulunamadı.</div>`;
+        return;
+    }
+
+    grid.innerHTML = "";
+    filtered.forEach((item, displayIndex) => {
+        const tempText = item.temp !== null ? `${item.temp}°C` : '--°C';
+        const alertClass = item.info.isBad ? 'bg-rose-500/10 border-rose-500/30 ring-1 ring-rose-500/50' : 'bg-slate-800 border-slate-700/50 hover:bg-slate-700/80';
+        const tempColor = item.info.isBad ? 'text-rose-400' : 'text-slate-100';
+        const delay = Math.min(displayIndex * 15, 300); // Max 300ms gecikme
+
+        const card = `
+            <div class="relative ${alertClass} border p-3 rounded-xl flex flex-col items-center justify-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md animate-fadeIn" style="animation-delay: ${delay}ms;">
+                <span class="text-xs font-bold text-slate-300 mb-1 truncate w-full" title="${item.name}">${item.name}</span>
+                <div class="text-3xl my-1 drop-shadow-sm">${item.info.emoji}</div>
+                <span class="text-lg font-black ${tempColor}">${tempText}</span>
+                <span class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">${item.info.text}</span>
+                ${item.info.isBad ? '<span class="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]" title="Olumsuz Hava Uyarısı"></span>' : ''}
+            </div>
+        `;
+        grid.innerHTML += card;
     });
 }
+
+// --- HAVA DURUMU FİLTRELEME VE ARAMA OLAYLARI ---
+const weatherSearchInput = document.getElementById('weather-search');
+const weatherFilterAll = document.getElementById('weather-filter-all');
+const weatherFilterAlert = document.getElementById('weather-filter-alert');
+
+if (weatherSearchInput) {
+    weatherSearchInput.addEventListener('input', (e) => {
+        currentWeatherSearch = e.target.value;
+        renderAdminWeather();
+    });
+}
+
+if (weatherFilterAll && weatherFilterAlert) {
+    weatherFilterAll.addEventListener('click', () => {
+        currentWeatherFilter = 'all';
+        weatherFilterAll.className = "px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg transition-colors shrink-0 shadow-sm";
+        weatherFilterAlert.className = "px-4 py-2 text-xs font-bold bg-slate-700 hover:bg-rose-600 text-slate-300 hover:text-white rounded-lg transition-colors shrink-0 flex items-center gap-1.5";
+        renderAdminWeather();
+    });
+
+    weatherFilterAlert.addEventListener('click', () => {
+        currentWeatherFilter = 'alert';
+        weatherFilterAlert.className = "px-4 py-2 text-xs font-bold bg-rose-600 text-white rounded-lg transition-colors shrink-0 flex items-center gap-1.5 shadow-sm ring-1 ring-rose-500";
+        weatherFilterAll.className = "px-4 py-2 text-xs font-bold bg-slate-700 hover:bg-indigo-500 text-slate-300 hover:text-white rounded-lg transition-colors shrink-0";
+        renderAdminWeather();
+    });
+}
+
+const refreshWeatherBtn = document.getElementById("refresh-weather-btn");
+if (refreshWeatherBtn) refreshWeatherBtn.addEventListener("click", loadAdminWeather);
+
+// --- İNTERNET BAĞLANTISI (ONLINE/OFFLINE) KONTROLÜ ---
+const networkBanner = document.getElementById('network-status-banner');
+const networkIcon = document.getElementById('network-status-icon');
+const networkText = document.getElementById('network-status-text');
+let networkBannerTimeout;
+
+function showNetworkStatus(isOnline) {
+    if (!networkBanner) return;
+    clearTimeout(networkBannerTimeout);
+    
+    if (isOnline) {
+        networkBanner.className = "fixed top-5 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl transition-all duration-500 backdrop-blur-md border bg-emerald-600/90 dark:bg-emerald-900/90 border-emerald-500/50 text-white translate-y-0 opacity-100 pointer-events-none";
+        networkIcon.innerHTML = `<svg class="w-5 h-5 shrink-0 text-emerald-100 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+        networkText.textContent = "İnternet bağlantısı sağlandı.";
+    } else {
+        networkBanner.className = "fixed top-5 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl transition-all duration-500 backdrop-blur-md border bg-rose-600/90 dark:bg-rose-900/90 border-rose-500/50 text-white translate-y-0 opacity-100 pointer-events-none";
+        networkIcon.innerHTML = `<svg class="w-5 h-5 shrink-0 text-rose-100 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243-4.243a5 5 0 000 7.072m0 0L3 21m5.657-9.9a9 9 0 0112.728 0m-12.728 0L3 3"></path></svg>`;
+        networkText.textContent = "Bağlantı koptu. Çevrimdışı moddasınız.";
+    }
+    
+    networkBannerTimeout = setTimeout(() => {
+        networkBanner.classList.replace('translate-y-0', '-translate-y-32');
+        networkBanner.classList.replace('opacity-100', 'opacity-0');
+    }, isOnline ? 3000 : 5000);
+}
+
+window.addEventListener('online', () => showNetworkStatus(true));
+window.addEventListener('offline', () => showNetworkStatus(false));
 
 // --- KAYNAK KOD KORUMASI (Sağ Tık ve Geliştirici Araçları Engelleme) ---
 document.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -842,3 +1480,42 @@ document.addEventListener('keydown', (e) => {
         e.preventDefault();
     }
 });
+
+// --- PWA (Service Worker) KAYDI VE GÜNCELLEME KONTROLÜ ---
+if ('serviceWorker' in navigator) {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+            window.location.reload();
+            refreshing = true;
+        }
+    });
+
+    window.addEventListener('load', () => {
+        const swConfigParams = new URLSearchParams(firebaseConfig).toString();
+        navigator.serviceWorker.register(`/sw.js?${swConfigParams}`)
+            .then(registration => {
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            const updatePrompt = document.getElementById('pwa-update-prompt');
+                            const updateBtn = document.getElementById('pwa-update-btn');
+                            const dismissBtn = document.getElementById('pwa-update-dismiss');
+                            
+                            if (updatePrompt) {
+                                updatePrompt.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+                                updateBtn?.addEventListener('click', () => {
+                                    updatePrompt.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                });
+                                dismissBtn?.addEventListener('click', () => {
+                                    updatePrompt.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+                                });
+                            }
+                        }
+                    });
+                });
+            });
+    });
+}

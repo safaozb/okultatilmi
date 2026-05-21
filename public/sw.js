@@ -1,20 +1,19 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'tatilmi-cache-v1';
+const CACHE_NAME = 'tatilmi-cache-v2';
 const urlsToCache = [
-    './',
-    './index.html',
-    './css/style.css',
-    './js/app.js',
-    './js/config.js',
-    './img/favicon.png',
-    './img/banner.png'
+    '/',
+    '/index.html',
+    '/css/style.css',
+    '/js/app.js',
+    '/js/config.js',
+    '/img/favicon.png',
+    '/img/banner.png'
 ];
 
 // Kurulum aşamasında temel dosyaları önbelleğe al
 self.addEventListener('install', event => {
-    self.skipWaiting(); // Yeni versiyonu anında devreye sok
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => cache.addAll(urlsToCache))
@@ -23,7 +22,18 @@ self.addEventListener('install', event => {
 
 // Aktifleştiğinde kontrolü hemen ele al
 self.addEventListener('activate', event => {
-    event.waitUntil(self.clients.claim());
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    // Mevcut CACHE_NAME ile eşleşmeyen tüm eski önbellekleri sil
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
 });
 
 // İstek yakalama (Network First, Fallback to Cache stratejisi)
@@ -46,24 +56,28 @@ self.addEventListener('fetch', event => {
     );
 });
 
+// Kullanıcıdan "Yenile" onayı geldiğinde beklemeyi atla ve yeni sürüme geç
+self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
+
 // --- FIREBASE PUSH NOTIFICATION (Arka Plan Bildirimleri) ---
-// DİKKAT: Aşağıdaki ayarları kendi config.js dosyanızdaki bilgilerle güncelleyin!
-firebase.initializeApp({
-  apiKey: "API_ANAHTARINIZ_BURAYA",
-  authDomain: "PROJE_ID.firebaseapp.com",
-  projectId: "PROJE_ID",
-  storageBucket: "PROJE_ID.firebasestorage.app",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
-});
+// Firebase ayarlarını app.js üzerinden URL parametresi ile dinamik olarak çekiyoruz
+const urlParams = new URLSearchParams(location.search);
+const dynamicFirebaseConfig = Object.fromEntries(urlParams.entries());
 
-const messaging = firebase.messaging();
+if (dynamicFirebaseConfig && dynamicFirebaseConfig.apiKey) {
+    firebase.initializeApp(dynamicFirebaseConfig);
+    const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage(function(payload) {
-  const notificationTitle = payload.notification.title || "Yeni Tatil Duyurusu!";
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: './img/favicon.png'
-  };
-  return self.registration.showNotification(notificationTitle, notificationOptions);
-});
+    messaging.onBackgroundMessage(function(payload) {
+        const notificationTitle = payload.notification.title || "Yeni Tatil Duyurusu!";
+        const notificationOptions = {
+            body: payload.notification.body,
+            icon: '/img/favicon.png'
+        };
+        return self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+}

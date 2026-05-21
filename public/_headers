@@ -1,0 +1,11 @@
+# Tüm statik resimler için 1 yıllık agresif cache
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# JavaScript dosyaları için anında doğrulama (Sürümü el ile değiştirmeye gerek kalmaz)
+/js/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# CSS dosyaları için anında doğrulama
+/css/*
+  Cache-Control: public, max-age=0, must-revalidate

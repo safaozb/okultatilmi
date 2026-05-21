@@ -7,7 +7,30 @@
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <script src="https://cdn.tailwindcss.com/3.4.3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="icon" type="image/png" href="./img/favicon.png">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    },
+                    animation: {
+                        fadeIn: 'fadeIn 0.4s ease-out forwards'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- PWA Kurulumu ve Mobil Tarayıcı Renklendirmesi -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="apple-touch-icon" href="/img/favicon.png">
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <style>
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -27,19 +50,19 @@
     <!-- Kimlik Doğrulama Ekranı -->
     <div id="login-section" class="w-full max-w-md bg-slate-800 p-8 rounded-3xl shadow-2xl shadow-black/40 border border-slate-700 transition-transform">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 tracking-tight drop-shadow-sm">Yönetici Girişi</h1>
+            <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-sm">Yönetici Girişi</h1>
             <p class="text-sm text-slate-400 mt-2">Sisteme erişmek için bilgilerinizi girin</p>
         </div>
         <form id="login-form" class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-slate-300 mb-1">E-posta</label>
-                <input type="email" id="email" required class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <input type="email" id="email" required class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-slate-500 focus:outline-none">
             </div>
             <div>
                 <label class="block text-sm font-medium text-slate-300 mb-1">Şifre</label>
                 <div class="relative">
-                    <input type="password" id="password" required class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-10">
-                    <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-indigo-400 transition-colors focus:outline-none" aria-label="Şifreyi Göster/Gizle">
+                    <input type="password" id="password" required class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-slate-500 focus:outline-none pr-10">
+                    <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-white transition-colors focus:outline-none" aria-label="Şifreyi Göster/Gizle">
                         <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         <svg id="eye-slash-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
                     </button>
@@ -50,7 +73,7 @@
                 <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <div id="login-error-text" class="font-medium"></div>
             </div>
-            <button type="submit" id="login-button" class="w-full bg-indigo-600 text-white font-bold py-2 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center">
+            <button type="submit" id="login-button" class="w-full bg-slate-700 text-white font-bold py-2 rounded-lg border border-slate-600 hover:bg-slate-600 transition flex items-center justify-center">
                 <span id="login-button-text">Giriş Yap</span>
                 <span id="login-spinner" class="hidden">
                     <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -66,7 +89,7 @@
     <div id="admin-section" class="w-full max-w-5xl bg-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl shadow-black/40 border border-slate-700 hidden transition-all">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Tatil Yönetim Merkezi</h1>
+                <h1 class="text-2xl font-bold text-white">Tatil Yönetim Merkezi</h1>
                 <p class="text-sm text-slate-400 mt-1">Sisteme yeni özel tatiller ekleyebilir, etkileşimli takvimden tarih seçebilirsiniz.</p>
             </div>
             <button id="logout-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-300 text-sm font-semibold rounded-xl transition-colors shadow-sm">
@@ -77,20 +100,22 @@
         
         <!-- Sekmeler (Tabs) -->
         <div class="flex space-x-6 border-b border-slate-700/50 mb-8">
-            <button id="tab-holidays" class="pb-3 text-sm font-semibold text-indigo-400 border-b-2 border-indigo-400 focus:outline-none transition-all">Tatil İşlemleri</button>
+            <button id="tab-holidays" class="pb-3 text-sm font-semibold text-slate-100 border-b-2 border-slate-100 focus:outline-none transition-all">Tatil İşlemleri</button>
             <button id="tab-stats" class="pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent hover:border-slate-600 focus:outline-none transition-all">Site Analiz</button>
+            <button id="tab-weather" class="pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent hover:border-slate-600 focus:outline-none transition-all">Meteoroloji İzleme</button>
+            <button id="tab-notifications" class="pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent hover:border-slate-600 focus:outline-none transition-all">Duyuru & Bildirimler</button>
         </div>
 
         <!-- Site Analiz Bölümü -->
-        <div id="section-stats" class="hidden space-y-6">
-            <div class="flex items-center gap-2 mb-2">
-                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        <div id="section-stats" class="hidden space-y-6 animate-fadeIn">
+            <div class="flex items-center gap-2 mb-4">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 <h2 class="text-lg font-bold text-slate-100">Genel İstatistikler</h2>
             </div>
             <!-- Admin İstatistikleri -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
-            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-colors hover:border-slate-600">
-                <div class="p-3 bg-indigo-500/10 rounded-xl text-indigo-400 shrink-0">
+            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-600 text-slate-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path></svg>
                 </div>
                 <div class="min-w-0">
@@ -98,8 +123,8 @@
                     <h4 id="stat-total" class="text-2xl font-bold text-slate-100 truncate">0</h4>
                 </div>
             </div>
-            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-colors hover:border-slate-600">
-                <div class="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 shrink-0">
+            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-600 text-emerald-400 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 <div class="min-w-0">
@@ -107,8 +132,8 @@
                     <h4 id="stat-upcoming" class="text-2xl font-bold text-slate-100 truncate">0</h4>
                 </div>
             </div>
-            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-colors hover:border-slate-600">
-                <div class="p-3 bg-blue-500/10 rounded-xl text-blue-400 shrink-0">
+            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-600 text-slate-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </div>
                 <div class="min-w-0">
@@ -116,8 +141,8 @@
                     <h4 id="stat-total-visitors" class="text-2xl font-bold text-slate-100 truncate">...</h4>
                 </div>
             </div>
-            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-colors hover:border-slate-600">
-                <div class="p-3 bg-amber-500/10 rounded-xl text-amber-400 shrink-0">
+            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-600 text-slate-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <div class="min-w-0">
@@ -125,8 +150,8 @@
                     <h4 id="stat-today-visitors" class="text-2xl font-bold text-slate-100 truncate">...</h4>
                 </div>
             </div>
-            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-colors hover:border-slate-600">
-                <div class="p-3 bg-rose-500/10 rounded-xl text-rose-400 shrink-0">
+            <div class="bg-slate-900/50 border border-slate-700/50 p-4 md:p-5 rounded-2xl flex items-center gap-4 shadow-inner transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-600 text-slate-300 shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                 </div>
                 <div class="min-w-0">
@@ -136,17 +161,121 @@
             </div>
             
             <!-- Grafik Alanı -->
-            <div class="bg-slate-900/50 border border-slate-700/50 p-5 md:p-6 rounded-2xl shadow-inner col-span-full transition-colors hover:border-slate-600">
+            <div class="bg-slate-900/50 border border-slate-700/50 p-5 md:p-6 rounded-2xl shadow-inner col-span-full transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
                 <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wider">Son 7 Günün Ziyaretçi Grafiği</h3>
                 <div class="relative h-64 sm:h-80 w-full">
                     <canvas id="visitor-chart"></canvas>
                 </div>
             </div>
+            
+            <!-- Saatlik Grafik Alanı -->
+            <div class="bg-slate-900/50 border border-slate-700/50 p-5 md:p-6 rounded-2xl shadow-inner col-span-full transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wider">Bugünün Saatlik Ziyaretçi Yoğunluğu</h3>
+                <div class="relative h-64 sm:h-80 w-full">
+                    <canvas id="hourly-visitor-chart"></canvas>
+                </div>
+            </div>
         </div>
         </div>
 
+
+        <!-- Meteoroloji İzleme Bölümü -->
+        <div id="section-weather" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-600 shrink-0">
+                        <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-100">81 İl Canlı Hava Durumu Paneli</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Olası kar ve fırtına tatillerini öngörmek için şehirlerin anlık hava durumunu izleyin.</p>
+                    </div>
+                </div>
+                <button id="refresh-weather-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold rounded-xl transition-colors shadow-sm shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Yenile
+                </button>
+            </div>
+            
+            <div class="bg-slate-900/50 border border-slate-700/50 p-5 rounded-2xl shadow-inner flex flex-col gap-4">
+                <!-- Kontrol Çubuğu (Arama ve Filtreleme) -->
+                <div class="flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
+                    <div class="relative w-full md:w-72">
+                        <input type="text" id="weather-search" placeholder="Şehir ara..." class="w-full bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-4 py-2.5 pl-10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-colors placeholder-slate-500">
+                        <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 custom-scrollbar">
+                        <button id="weather-filter-all" class="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg transition-colors shrink-0 shadow-sm">Tüm Şehirler</button>
+                        <button id="weather-filter-alert" class="px-4 py-2 text-xs font-bold bg-slate-700 hover:bg-rose-600 text-slate-300 hover:text-white rounded-lg transition-colors shrink-0 flex items-center gap-1.5"><span id="weather-alert-count" class="bg-rose-500 text-white rounded px-1.5 py-0.5 text-[10px]">0</span> Uyarılar</button>
+                    </div>
+                </div>
+                <div id="weather-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2">
+                    <!-- Veriler JS ile doldurulacak -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Duyuru ve Bildirimler Bölümü -->
+        <div id="section-notifications" class="hidden animate-fadeIn space-y-6">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-600 shrink-0">
+                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-100">İletişim ve Duyuru Merkezi</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Öğrencilere anlık bildirimler gönderin ve site üstü duyuru bandını yönetin.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-6">
+                    <!-- Hızlı Bildirim Gönder -->
+                    <div class="bg-slate-800/80 border border-slate-700/50 p-5 md:p-6 rounded-2xl shadow-inner">
+                        <h3 class="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            Anlık Bildirim Gönder (Push)
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Sitenizin bildirimlerine izin veren tüm öğrencilere özel içerikli anlık duyurular (Push Notification) gönderebilirsiniz.</p>
+                        <button id="send-push-btn" type="button" class="w-full flex items-center justify-center gap-2 bg-slate-700 border border-slate-600 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl transition-all shadow-sm">
+                            Tüm Öğrencilere Duyur
+                        </button>
+                    </div>
+                    <!-- Sitedeki Geçmiş Bildirimleri Yönet -->
+                    <div class="bg-slate-800/80 border border-slate-700/50 p-5 md:p-6 rounded-2xl shadow-inner">
+                        <h3 class="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            Sitedeki Geçmiş Bildirimleri Yönet
+                        </h3>
+                        <div id="admin-notifications-list" class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-2 mt-4 border-t border-slate-700/50 pt-4">
+                            <!-- JS ile eklenecek -->
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <!-- Hızlı Duyuru Banner'ı Yönetimi -->
+                    <div class="bg-slate-800/80 border border-slate-700/50 p-5 md:p-6 rounded-2xl shadow-inner">
+                        <h3 class="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                            Canlı Duyuru Bandı (Son Dakika)
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">Ana sayfanın en üstünde kayan yazı olarak görünecek acil durum veya bilgilendirme mesajını belirleyin.</p>
+                        <div class="space-y-4">
+                            <textarea id="announcement-text" rows="2" placeholder="Örn: Meteoroloji'den alınan son bilgilere göre yarın İstanbul'da yoğun kar yağışı bekleniyor..." class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 text-white placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all resize-none"></textarea>
+                            <div class="flex items-center justify-between">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="announcement-active" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-slate-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                                    <span class="ms-3 text-sm font-medium text-slate-300">Duyuruyu Aktif Et</span>
+                                </label>
+                                <button id="save-announcement-btn" class="px-4 py-2 bg-slate-700 border border-slate-600 hover:bg-slate-600 text-white text-sm font-bold rounded-xl transition-all shadow-sm">Kaydet</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tatil İşlemleri Bölümü -->
-        <div id="section-holidays">
+        <div id="section-holidays" class="animate-fadeIn">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
                 <!-- Sol Kolon: Etkileşimli Takvim ve Form (7 Birim) -->
                 <div class="lg:col-span-7 space-y-6">
@@ -169,7 +298,7 @@
                     <div id="admin-calendar-grid" class="grid grid-cols-7 gap-1 md:gap-2">
                         <!-- Günler JS ile buraya eklenecek -->
                     </div>
-                    <div class="mt-5 flex items-start gap-2 text-xs text-indigo-300 bg-indigo-500/10 p-3 rounded-xl border border-indigo-500/20">
+                    <div class="mt-5 flex items-start gap-2 text-xs text-slate-300 bg-slate-800 p-3 rounded-xl border border-slate-600">
                         <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <p class="leading-relaxed">Tatil eklemek için takvim üzerinden <strong>başlangıç</strong> ve <strong>bitiş</strong> günlerine tıklayabilirsiniz. Süre otomatik olarak hesaplanacaktır.</p>
                     </div>
@@ -179,80 +308,97 @@
                 <form id="add-holiday-form" class="space-y-5 bg-slate-900/50 p-5 md:p-6 rounded-2xl border border-slate-700/50 shadow-inner">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1.5">Tatil Adı</label>
-                        <input type="text" id="h-name" required placeholder="Örn: Kar Tatili (İstanbul)" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
+                        <input type="text" id="h-name" required placeholder="Örn: Kar Tatili (İstanbul)" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1.5">Başlangıç Tarihi</label>
-                            <input type="date" id="h-start" required class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all [color-scheme:dark]">
+                            <input type="date" id="h-start" required class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all [color-scheme:dark]">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1.5">Bitiş Tarihi</label>
-                            <input type="date" id="h-end" required class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all [color-scheme:dark]">
+                            <input type="date" id="h-end" required class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all [color-scheme:dark]">
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1.5">Hesaplanan Süre</label>
-                            <input type="text" id="h-duration" required placeholder="Örn: 1 Gün" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
+                            <input type="text" id="h-duration" required placeholder="Otomatik hesaplanır" readonly class="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600 text-slate-300 placeholder-slate-500 rounded-xl focus:outline-none cursor-not-allowed transition-all">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1.5">Tatil Türü</label>
-                            <select id="h-type" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all cursor-pointer">
+                            <select id="h-type" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all cursor-pointer">
                                 <option value="meb">Okul Tatili (MEB)</option>
                                 <option value="public">Resmi Tatil</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1.5">Durum</label>
+                            <select id="h-status" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 text-white rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all cursor-pointer">
+                                <option value="active">Aktif (Geçerli)</option>
+                                <option value="cancelled">İptal Edildi</option>
+                                <option value="postponed">Ertelendi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1.5">Şehir / İl</label>
+                            <!-- Şehir Filtresi (Aramalı Admin UI) -->
+                            <div class="relative" id="admin-city-dropdown-container">
+                                <button type="button" id="admin-city-dropdown-btn" class="w-full flex items-center justify-between px-4 py-2.5 bg-slate-800 border border-slate-600 text-white rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all cursor-pointer">
+                                    <span id="admin-city-dropdown-text" class="truncate">🌍 Tüm Türkiye (Genel)</span>
+                                    <svg class="w-4 h-4 ml-2 opacity-50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div id="admin-city-dropdown-menu" class="absolute z-50 mt-1 w-full bg-slate-700 rounded-xl shadow-xl border border-slate-600 hidden flex-col transition-all opacity-0 -translate-y-2 origin-top">
+                                    <div class="p-2 border-b border-slate-600">
+                                        <input type="text" id="admin-city-dropdown-search" placeholder="Şehir ara..." class="w-full px-3 py-1.5 text-sm bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500/50 text-white placeholder-slate-400">
+                                    </div>
+                                    <ul id="admin-city-dropdown-list" class="max-h-56 overflow-y-auto custom-scrollbar text-sm py-1">
+                                        <!-- JS ile dolacak -->
+                                    </ul>
+                                </div>
+                                <input type="hidden" id="h-city" value="genel">
+                            </div>
+                        </div>
                     </div>
                     <div class="pt-2">
-                        <button type="submit" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 rounded-xl hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/25">
+                        <button type="submit" class="w-full flex items-center justify-center gap-2 bg-slate-700 border border-slate-600 text-white font-bold py-3 rounded-xl hover:bg-slate-600 transition-all shadow-md">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             <span>Tatili Kaydet ve Yayınla</span>
                         </button>
                     </div>
                 </form>
-                
-                <!-- Hızlı Bildirim Gönder -->
-                <div class="bg-indigo-900/30 border border-indigo-700/50 p-5 md:p-6 rounded-2xl shadow-inner">
-                    <h3 class="text-sm font-bold text-indigo-300 mb-2 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                        Anlık Bildirim Gönder (Push)
-                    </h3>
-                    <p class="text-xs text-indigo-200/70 mb-4 leading-relaxed">Sitenizin bildirimlerine izin veren tüm öğrencilere "Yarın okullar tatil!" duyurusunu anında iletin.</p>
-                    <button id="send-push-btn" type="button" class="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-500/25">
-                        Tüm Öğrencilere Duyur
-                    </button>
-                </div>
             </div>
 
             <!-- Sağ Kolon: Mevcut Tatiller Listesi (5 Birim) -->
-            <div class="lg:col-span-5 bg-slate-900/50 p-5 md:p-6 rounded-2xl border border-slate-700/50 shadow-inner flex flex-col h-[700px] max-h-[750px]">
-                <div class="flex flex-col gap-4 mb-5 shrink-0 border-b border-slate-700/50 pb-5">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-                            <h2 class="text-lg font-bold text-slate-100">Mevcut Tatiller</h2>
+            <div class="lg:col-span-5">
+                <div class="bg-slate-900/50 p-5 md:p-6 rounded-2xl border border-slate-700/50 shadow-inner flex flex-col h-[600px] lg:h-[calc(100vh-8rem)] lg:sticky lg:top-8">
+                    <div class="flex flex-col gap-4 mb-5 shrink-0 border-b border-slate-700/50 pb-5">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                <h2 class="text-lg font-bold text-slate-100">Mevcut Tatiller</h2>
+                            </div>
+                            <label class="inline-flex items-center cursor-pointer group" title="Geçmiş tatilleri gizle">
+                                <input type="checkbox" id="admin-filter-past" class="sr-only peer">
+                                <div class="relative w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-slate-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-500"></div>
+                                <span class="ms-2 text-xs font-medium text-slate-400 group-hover:text-slate-300 transition-colors">Geçmişi Gizle</span>
+                            </label>
                         </div>
-                        <label class="inline-flex items-center cursor-pointer group" title="Geçmiş tatilleri gizle">
-                            <input type="checkbox" id="admin-filter-past" class="sr-only peer">
-                            <div class="relative w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-slate-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
-                            <span class="ms-2 text-xs font-medium text-slate-400 group-hover:text-slate-300 transition-colors">Geçmişi Gizle</span>
-                        </label>
+                        <div class="relative">
+                            <input type="text" id="admin-search-input" placeholder="Tatil ismine göre ara..." class="w-full bg-slate-800/80 border border-slate-600/50 text-white text-sm rounded-xl px-4 py-2.5 pl-10 focus:outline-none focus:border-slate-500 transition-colors placeholder-slate-500">
+                            <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
                     </div>
-                    <div class="relative">
-                        <input type="text" id="admin-search-input" placeholder="Tatil ismine göre ara..." class="w-full bg-slate-800/80 border border-slate-600/50 text-white text-sm rounded-xl px-4 py-2.5 pl-10 focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-500">
-                        <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                </div>
                 
-                <div id="current-holidays-list" class="space-y-3 overflow-y-auto pr-2 pb-2 flex-1 custom-scrollbar" style="scrollbar-width: thin; scrollbar-color: #475569 transparent;">
-                    <!-- JS ile doldurulacak -->
-                    <p id="no-holidays-msg" class="text-slate-400 text-sm hidden bg-slate-800/50 p-4 rounded-xl text-center border border-slate-700/50">Henüz eklenmiş özel tatil bulunmamaktadır.</p>
+                    <div id="current-holidays-list" class="space-y-3 overflow-y-auto pr-2 pb-2 flex-1 custom-scrollbar" style="scrollbar-width: thin; scrollbar-color: #475569 transparent;">
+                        <!-- JS ile doldurulacak -->
+                        <p id="no-holidays-msg" class="text-slate-400 text-sm hidden bg-slate-800/50 p-4 rounded-xl text-center border border-slate-700/50">Henüz eklenmiş özel tatil bulunmamaktadır.</p>
+                    </div>
                 </div>
             </div>
         </div>
-        </div>
     </div>
+        </div>
 
     <!-- Modern Silme Onay Modalı -->
     <div id="delete-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
@@ -282,6 +428,109 @@
         </div>
     </div>
 
-    <script type="module" src="./js/admin.js?v=1.1"></script>
+    <!-- Bildirim Silme Onay Modalı -->
+    <div id="delete-notification-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <div id="delete-notification-modal-backdrop" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity opacity-0 duration-300"></div>
+        <div id="delete-notification-modal-content" class="relative w-full max-w-sm bg-slate-800 border border-slate-700 rounded-3xl shadow-2xl p-6 transform scale-95 opacity-0 transition-all duration-300">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-14 h-14 rounded-full bg-rose-500/20 flex items-center justify-center mb-5 ring-4 ring-rose-500/10">
+                    <svg class="w-7 h-7 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-100 mb-2">Bildirimi Kaldır</h3>
+                <p class="text-sm text-slate-400 mb-6 leading-relaxed">Bu bildirimi siteden tamamen kaldırmak istediğinize emin misiniz?</p>
+                <div class="flex w-full gap-3">
+                    <button id="cancel-delete-notification-btn" class="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl transition-colors shadow-sm">İptal</button>
+                    <button id="confirm-delete-notification-btn" class="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl transition-colors shadow-sm shadow-rose-600/20 flex items-center justify-center">
+                        <span id="confirm-delete-notification-text">Evet, Kaldır</span>
+                        <span id="confirm-delete-notification-spinner" class="hidden ml-2">
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Özel Bildirim Gönderme Modalı -->
+    <div id="push-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <div id="push-modal-backdrop" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity opacity-0 duration-300"></div>
+        <div id="push-modal-content" class="relative w-full max-w-lg bg-slate-800 border border-slate-700 rounded-3xl shadow-2xl p-6 transform scale-95 opacity-0 transition-all duration-300">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center ring-4 ring-slate-600/50">
+                        <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-100">Özel Bildirim Gönder</h3>
+                </div>
+                
+                <form id="push-form" class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Bildirim Başlığı</label>
+                        <input type="text" id="push-title" required placeholder="Örn: 🔔 Kar Tatili Müjdesi!" class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 text-white placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Hedef Şehir</label>
+                        <select id="push-city" class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 text-white rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all cursor-pointer">
+                            <option value="all">🌍 Tüm Türkiye (Genel Bildirim)</option>
+                            <!-- JS ile şehirler otomatik doldurulacak -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Bildirim İçeriği (Mesaj)</label>
+                        <textarea id="push-body" required rows="3" placeholder="Örn: Yarın İstanbul genelinde okullar tatil edilmiştir. Detaylar ve güncel takvim için hemen tıklayın!" class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 text-white placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all resize-none"></textarea>
+                    </div>
+                    <div class="mt-4 p-4 bg-slate-900/50 rounded-xl border border-slate-700/50">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="push-send-device" class="sr-only peer" checked>
+                            <div class="relative w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-slate-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
+                            <span class="ms-3 text-sm font-medium text-slate-300">Cihazlara da Push Bildirimi Gönder (FCM)</span>
+                        </label>
+                        <p class="text-xs text-slate-500 mt-2">Bu seçenek kapalıysa, bu mesaj sadece sitenin 'Bildirimler' (Zil) kısmında gözükür, kullanıcılara dış bildirim olarak iletilmez.</p>
+                    </div>
+                </form>
+
+                <div class="flex w-full gap-3">
+                    <button type="button" id="cancel-push-btn" class="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl transition-colors shadow-sm">İptal</button>
+                    <button type="button" id="confirm-push-btn" class="flex-1 px-4 py-2.5 bg-slate-700 border border-slate-500 hover:bg-slate-600 text-white font-semibold rounded-xl transition-colors shadow-sm flex items-center justify-center">
+                        <span id="confirm-push-text">Bildirimi Gönder</span>
+                        <span id="confirm-push-spinner" class="hidden ml-2">
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Yeni Sürüm (Uygulama Kapa/Aç) Prompt'u -->
+    <div id="pwa-update-prompt" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-4 transition-all duration-500 translate-y-24 opacity-0 pointer-events-none w-[90%] max-w-sm">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl drop-shadow-md">✨</span>
+            <div class="flex flex-col">
+                <span class="text-sm font-bold text-slate-100">Yeni Sürüm Hazır!</span>
+                <span class="text-[11px] text-slate-400 leading-tight">Yenilikleri görmek için paneli güncelleyin.</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 border-l border-slate-700 pl-4 ml-auto">
+            <button id="pwa-update-dismiss" class="text-xs font-medium text-slate-400 hover:text-white transition-colors px-2 py-1">Geç</button>
+            <button id="pwa-update-btn" class="text-xs font-bold bg-slate-100 text-slate-900 px-3 py-1.5 rounded-lg hover:bg-white transition-colors shadow-sm">Yenile</button>
+        </div>
+    </div>
+
+    <!-- Ağ Durumu Bildirim Banner'ı -->
+    <div id="network-status-banner" class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl transition-all duration-500 -translate-y-32 opacity-0 pointer-events-none backdrop-blur-md border">
+        <div id="network-status-icon"></div>
+        <span id="network-status-text" class="text-sm font-medium leading-tight"></span>
+    </div>
+
+    <script type="module" src="/js/admin.js"></script>
 </body>
 </html>
