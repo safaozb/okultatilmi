@@ -29,6 +29,7 @@ let visitorUnsubscribe = null;
 let dailyVisitorUnsubscribe = null;
 let visitorChart = null;
 let hourlyChart = null;
+let miniVisitorChart = null;
 let subscribersUnsubscribe = null;
 let announcementUnsubscribe = null;
 let siteNotificationsUnsubscribe = null;
@@ -150,6 +151,37 @@ async function loadChartData() {
                 }
             }
         });
+        
+        // Mini Grafik (Ana Sayfa İçin)
+        const miniCtx = document.getElementById('mini-visitor-chart');
+        if (miniCtx) {
+            if (miniVisitorChart) miniVisitorChart.destroy();
+            miniVisitorChart = new Chart(miniCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ziyaretçi',
+                        data: data,
+                        borderColor: '#818cf8', // indigo-400
+                        backgroundColor: 'rgba(129, 140, 248, 0.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        pointBackgroundColor: '#818cf8'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#f1f5f9', cornerRadius: 6, displayColors: false } },
+                    scales: { y: { display: false, beginAtZero: true }, x: { display: false } },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+        }
     } catch (error) {
         console.error("Grafik verileri çekilemedi:", error);
     }
@@ -542,6 +574,16 @@ onAuthStateChanged(auth, async (user) => {
         loginSection.classList.add("hidden");
         adminSection.classList.remove("hidden");
         
+        // Hoş geldin metnine yöneticinin adını ekleme
+        const welcomeNameEl = document.getElementById('admin-welcome-name');
+        if (welcomeNameEl) {
+            const displayName = user.displayName || user.email.split('@')[0];
+            welcomeNameEl.textContent = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+        }
+        
+        // Oturum açıldığında ilk sekme olarak "Ana Sayfa"yı göster
+        if (tabHome && sectionHome) switchAdminTab(tabHome, sectionHome);
+        
         await fetchSystemHolidays();
 
         if (!holidaysCollectionUnsubscribe) {
@@ -573,10 +615,17 @@ onAuthStateChanged(auth, async (user) => {
             const el = document.getElementById("stat-today-visitors");
             if (el) el.textContent = count.toLocaleString('tr-TR');
             
+            const miniEl = document.getElementById("mini-stat-today");
+            if (miniEl) miniEl.textContent = count.toLocaleString('tr-TR');
+            
             // Grafiğin son gününü canlı güncelle
             if (visitorChart && visitorChart.data && visitorChart.data.datasets[0].data.length === 7) {
                 visitorChart.data.datasets[0].data[6] = count;
                 visitorChart.update();
+            }
+            if (miniVisitorChart && miniVisitorChart.data && miniVisitorChart.data.datasets[0].data.length === 7) {
+                miniVisitorChart.data.datasets[0].data[6] = count;
+                miniVisitorChart.update();
             }
         });
 
@@ -685,6 +734,10 @@ onAuthStateChanged(auth, async (user) => {
         if (visitorChart) {
             visitorChart.destroy();
             visitorChart = null;
+        }
+        if (miniVisitorChart) {
+            miniVisitorChart.destroy();
+            miniVisitorChart = null;
         }
         if (hourlyChart) {
             hourlyChart.destroy();
@@ -1222,32 +1275,45 @@ if (hEndInput) hEndInput.addEventListener("change", (e) => {
 });
 
 // --- SEKME (TAB) GEÇİŞLERİ ---
+const tabHome = document.getElementById("tab-home");
 const tabHolidays = document.getElementById("tab-holidays");
 const tabStats = document.getElementById("tab-stats");
 const tabWeather = document.getElementById("tab-weather");
 const tabNotifications = document.getElementById("tab-notifications");
+const sectionHome = document.getElementById("section-home");
 const sectionHolidays = document.getElementById("section-holidays");
 const sectionStats = document.getElementById("section-stats");
 const sectionWeather = document.getElementById("section-weather");
 const sectionNotifications = document.getElementById("section-notifications");
 
 function switchAdminTab(activeTab, activeSection) {
-    const tabs = [tabHolidays, tabStats, tabWeather, tabNotifications];
-    const sections = [sectionHolidays, sectionStats, sectionWeather, sectionNotifications];
+    const tabs = [tabHome, tabHolidays, tabStats, tabWeather, tabNotifications];
+    const sections = [sectionHome, sectionHolidays, sectionStats, sectionWeather, sectionNotifications];
     
     tabs.forEach(t => {
-        if (t) t.className = "pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent hover:border-slate-600 focus:outline-none transition-all";
+        if (t) t.className = "pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent hover:border-slate-600 focus:outline-none transition-all whitespace-nowrap";
     });
     sections.forEach(s => {
         if (s) s.classList.add("hidden");
     });
     
-    if (activeTab) activeTab.className = "pb-3 text-sm font-semibold text-slate-100 border-b-2 border-slate-100 focus:outline-none transition-all";
+    if (activeTab) activeTab.className = "pb-3 text-sm font-semibold text-slate-100 border-b-2 border-slate-100 focus:outline-none transition-all whitespace-nowrap";
     if (activeSection) activeSection.classList.remove("hidden");
 }
 
+if (tabHome) tabHome.addEventListener("click", () => switchAdminTab(tabHome, sectionHome));
 if (tabHolidays) tabHolidays.addEventListener("click", () => switchAdminTab(tabHolidays, sectionHolidays));
 if (tabStats) tabStats.addEventListener("click", () => switchAdminTab(tabStats, sectionStats));
+
+// Ana sayfadaki Hızlı Kısayol (Quick Links) butonlarının olayları
+document.querySelectorAll('.quick-link-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const targetId = e.currentTarget.getAttribute('data-target');
+        const targetBtn = document.getElementById(targetId);
+        if (targetBtn) targetBtn.click();
+    });
+});
+
 if (tabWeather) tabWeather.addEventListener("click", () => {
     switchAdminTab(tabWeather, sectionWeather);
     if (typeof loadAdminWeather === "function" && !window.adminWeatherLoaded) {
@@ -1342,8 +1408,10 @@ async function loadAdminWeather() {
         const data = await res.json();
 
         grid.innerHTML = "";
-        const results = Array.isArray(data) ? data : [data];
         
+        // Open-Meteo, çoklu lokasyon isteklerinde yanıtı bir DİZİ (array) olarak döndürür.
+        const results = Array.isArray(data) ? data : [data];
+
         weatherDataCache = adminCityCoords.map((city, index) => {
             const currentData = results[index]?.current || {};
             const temp = currentData.temperature_2m !== undefined ? Math.round(currentData.temperature_2m) : null;

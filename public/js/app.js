@@ -544,10 +544,13 @@ function updateDOM() {
         if (hidePastHolidays && isPast) return;
         displayedCount++;
 
+        // Türüne Göre Renklendirme ve Etiketler
+        const isMeb = holiday.type === 'meb';
+
         // Daha modern etkileşimli kart sınıfları ve sırayla geliş animasyonu
         const interactionClass = isPast 
             ? "opacity-60 grayscale bg-slate-50 dark:bg-slate-900/50 border border-transparent" 
-            : "bg-white dark:bg-slate-800 hover:-translate-y-1 hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-default";
+            : `bg-white dark:bg-slate-800 hover:-translate-y-1 hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-default transition-all duration-300 ${isMeb ? 'hover:border-indigo-300 dark:hover:border-indigo-600' : 'hover:border-emerald-300 dark:hover:border-emerald-600'}`;
         const dateRange = start === end ? formatDate(holiday.start) : `${formatDate(holiday.start)} - ${formatDate(holiday.end)}`;
 
         // Takvim yaprağı görünümü için tarihi ayrıştırıyoruz (Sol taraftaki ikonik takvim için)
@@ -556,18 +559,18 @@ function updateDOM() {
         const leafDay = startLeaf.toLocaleDateString('tr-TR', { day: 'numeric' });
         const leafWeekday = startLeaf.toLocaleDateString('tr-TR', { weekday: 'short' });
 
-        // Türüne Göre Renklendirme ve Etiketler
-        const isMeb = holiday.type === 'meb';
-        let leafBgClass = 'bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600';
-        let leafTextClass = 'text-slate-700 dark:text-slate-200';
-        const badgeClass = 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600';
+        let leafBgClass = isMeb ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800/30' : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/30';
+        let leafTextClass = isMeb ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400';
+        let badgeClass = isMeb ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/50' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50';
         
         if (isCancelled) {
             leafBgClass = 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/50 opacity-80';
             leafTextClass = 'text-rose-700 dark:text-rose-400 line-through';
+            badgeClass = 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/50';
         } else if (isPostponed) {
             leafBgClass = 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50';
             leafTextClass = 'text-amber-700 dark:text-amber-400';
+            badgeClass = 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/50';
         }
 
         const typeLabel = isMeb ? 'Okul Tatili' : 'Resmi Tatil';
