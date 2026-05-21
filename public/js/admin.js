@@ -1551,39 +1551,8 @@ document.addEventListener('keydown', (e) => {
 
 // --- PWA (Service Worker) KAYDI VE GÜNCELLEME KONTROLÜ ---
 if ('serviceWorker' in navigator) {
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-            window.location.reload();
-            refreshing = true;
-        }
-    });
-
     window.addEventListener('load', () => {
         const swConfigParams = new URLSearchParams(firebaseConfig).toString();
-        navigator.serviceWorker.register(`/sw.js?${swConfigParams}`)
-            .then(registration => {
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            const updatePrompt = document.getElementById('pwa-update-prompt');
-                            const updateBtn = document.getElementById('pwa-update-btn');
-                            const dismissBtn = document.getElementById('pwa-update-dismiss');
-                            
-                            if (updatePrompt) {
-                                updatePrompt.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
-                                updateBtn?.addEventListener('click', () => {
-                                    updatePrompt.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
-                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
-                                });
-                                dismissBtn?.addEventListener('click', () => {
-                                    updatePrompt.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
-                                });
-                            }
-                        }
-                    });
-                });
-            });
+        navigator.serviceWorker.register(`/sw.js?${swConfigParams}`);
     });
 }

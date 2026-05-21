@@ -6,7 +6,7 @@
     
     <!-- PWA Kurulumu ve Mobil Tarayıcı Renklendirmesi -->
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#4f46e5">
+    <meta name="theme-color" id="meta-theme-color" content="#f8fafc">
     <link rel="apple-touch-icon" href="/img/favicon.png">
 
     <meta charset="UTF-8">
@@ -39,10 +39,10 @@
     <!-- LCP (En Büyük İçerik Boyaması) İçin Kritik Görseli Önceden Yükle -->
     <link rel="preload" as="image" href="/img/banner.png">
     <!-- Modül Scriptlerini Önceden Yükle -->
-    <link rel="modulepreload" href="/js/config.js">
-    <link rel="modulepreload" href="/js/app.js">
+    <link rel="modulepreload" href="/js/config.js?v=2">
+    <link rel="modulepreload" href="/js/app.js?v=2">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>Tatil Mi? - Bugün Okul Tatil mi?</title>
     <script src="https://cdn.tailwindcss.com/3.4.3"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -77,6 +77,7 @@
         // Sayfa yüklenirken gözü almaması için (FOUC) tema ön kontrolü
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
+            if (document.getElementById('meta-theme-color')) document.getElementById('meta-theme-color').setAttribute('content', '#0f172a');
         } else {
             document.documentElement.classList.remove('dark');
         }
@@ -90,7 +91,7 @@
             if (installBtn) installBtn.classList.remove('hidden');
         });
     </script>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=2">
     <style>
         /* Özel Kaydırma Çubuğu (Scrollbar) Tasarımı */
         ::-webkit-scrollbar {
@@ -136,15 +137,24 @@
                 border-width: 2px; /* Dış boşluk etkisini mobil için inceltiyoruz */
             }
         }
+
+        /* Mobil cihazlarda dokunma vurgusunu (gri arka plan) kaldır ve daha native hissettir */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        button, a, input, select, textarea {
+            touch-action: manipulation; /* Tıklama gecikmesini iptal eder */
+        }
+        
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 antialiased min-h-screen flex flex-col transition-colors duration-300 select-none">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 antialiased min-h-screen flex flex-col transition-colors duration-300 select-none pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:pb-0">
 
     <!-- Toast Bildirim Konteyneri (App) -->
     <div id="app-toast-container" class="fixed top-5 right-5 z-[110] flex flex-col gap-3 pointer-events-none"></div>
 
     <!-- Navbar -->
-    <nav class="sticky top-0 z-50 w-full bg-white dark:bg-slate-900 shadow-sm border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+    <nav id="main-navbar" class="fixed top-0 left-0 z-[100] w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-sm border-b border-slate-200 dark:border-slate-800 transition-all duration-300">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
             <a href="#" class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Tatil Mi?</a>
             <div class="flex items-center gap-4">
@@ -202,7 +212,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 md:py-10 space-y-12 md:space-y-16">
+    <main class="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 pt-24 pb-8 md:pt-28 md:pb-10 space-y-12 md:space-y-16">
         
         <!-- Hero Section -->
         <section class="relative text-center bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-all duration-500 opacity-0 animate-fadeInUp shadow-sm hover:shadow-md flex flex-col justify-center min-h-[320px] sm:min-h-[400px]">
@@ -256,21 +266,29 @@
                     <div class="flex items-center gap-2">
                         <!-- Şehir Filtresi (Aramalı) -->
                         <div class="relative" id="city-dropdown-container">
-                            <button id="city-dropdown-btn" class="flex items-center justify-between w-40 sm:w-48 px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-sm focus:ring-2 focus:ring-slate-400 focus:outline-none transition-all cursor-pointer">
+                            <button id="city-dropdown-btn" class="flex items-center justify-between w-40 sm:w-48 px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-sm focus:ring-2 focus:ring-slate-400 focus:outline-none transition-all cursor-pointer active:scale-95">
                                 <span id="city-dropdown-text" class="truncate">🌍 Tüm Şehirler</span>
                                 <svg class="w-4 h-4 ml-2 opacity-50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
-                            <div id="city-dropdown-menu" class="absolute z-50 mt-1 w-full sm:w-56 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 hidden flex-col transition-all opacity-0 -translate-y-2 origin-top">
-                                <div class="p-2 border-b border-slate-100 dark:border-slate-700">
-                                    <input type="text" id="city-dropdown-search" placeholder="Şehir ara..." class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400 text-slate-700 dark:text-slate-300 placeholder-slate-400">
+                            
+                            <!-- Mobil Arka Plan Karartması (Backdrop) -->
+                            <div id="city-dropdown-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden opacity-0 transition-opacity duration-300 sm:hidden"></div>
+                            
+                            <!-- Dropdown / Mobil Modalı -->
+                            <div id="city-dropdown-menu" class="fixed sm:absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 sm:top-[calc(100%+0.5rem)] sm:left-0 sm:translate-x-0 sm:translate-y-0 z-[120] w-[85vw] sm:w-56 bg-white dark:bg-slate-800 rounded-3xl sm:rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 hidden flex-col transition-all duration-300 opacity-0 scale-95 sm:origin-top">
+                                <div class="p-3 sm:p-2 border-b border-slate-100 dark:border-slate-700">
+                                    <input type="text" id="city-dropdown-search" placeholder="Şehir ara..." class="w-full px-4 py-3 sm:px-3 sm:py-1.5 text-base sm:text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl sm:rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:text-slate-300 placeholder-slate-400">
                                 </div>
-                                <ul id="city-dropdown-list" class="max-h-60 overflow-y-auto custom-scrollbar text-sm py-1">
+                                <ul id="city-dropdown-list" class="max-h-[50vh] sm:max-h-60 overflow-y-auto custom-scrollbar text-base sm:text-sm py-1">
                                     <!-- JS ile otomatik eklenecek -->
                                 </ul>
+                                <div class="p-3 border-t border-slate-100 dark:border-slate-700 sm:hidden">
+                                    <button id="city-dropdown-close-mobile" class="w-full py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold rounded-xl active:scale-95 transition-all">Vazgeç</button>
+                                </div>
                             </div>
                         </div>
                         <!-- Konum Bul Butonu -->
-                        <button id="geo-location-btn" class="p-1.5 text-sm font-medium rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-all shadow-sm focus:outline-none" title="Otomatik Konum Bul">
+                        <button id="geo-location-btn" class="p-2 sm:p-1.5 text-sm font-medium rounded-lg sm:rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-all shadow-sm focus:outline-none active:scale-90" title="Otomatik Konum Bul">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v2m0 8v2m-6-6h2m8 0h2m-6-6a6 6 0 110 12 6 6 0 010-12z"></path></svg>
                         </button>
                     </div>
@@ -425,8 +443,28 @@
         </div>
     </footer>
 
+    <!-- Mobil Alt Navigasyon (Sadece Mobil) -->
+    <div class="fixed bottom-0 left-0 z-[90] w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 flex justify-around items-center px-2 py-1.5 sm:hidden pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <a href="#" onclick="window.scrollTo({top:0, behavior:'smooth'}); return false;" class="flex flex-col items-center justify-center gap-1 p-2 text-indigo-600 dark:text-indigo-400 flex-1 active:scale-90 active:bg-slate-100 dark:active:bg-slate-800 rounded-2xl transition-all">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span class="text-[10px] font-bold whitespace-nowrap">Ana Sayfa</span>
+        </a>
+        <a href="#holiday-schedule" class="flex flex-col items-center justify-center gap-1 p-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 flex-1 active:scale-90 active:bg-slate-100 dark:active:bg-slate-800 rounded-2xl transition-all">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span class="text-[10px] font-semibold whitespace-nowrap">Takvim</span>
+        </a>
+        <button id="mobile-nav-weather-btn" class="flex flex-col items-center justify-center gap-1 p-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 flex-1 focus:outline-none active:scale-90 active:bg-slate-100 dark:active:bg-slate-800 rounded-2xl transition-all">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+            <span class="text-[10px] font-semibold whitespace-nowrap">Hava</span>
+        </button>
+        <button id="mobile-nav-share-btn" class="flex flex-col items-center justify-center gap-1 p-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 flex-1 focus:outline-none active:scale-90 active:bg-slate-100 dark:active:bg-slate-800 rounded-2xl transition-all">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+            <span class="text-[10px] font-semibold whitespace-nowrap">Paylaş</span>
+        </button>
+    </div>
+
     <!-- Scroll to Top Button -->
-    <button id="scroll-to-top-btn" class="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 p-2.5 md:p-3 bg-slate-800 dark:bg-slate-700 text-white rounded-full shadow-md hover:bg-slate-700 dark:hover:bg-slate-600 hover:-translate-y-1 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none focus:outline-none" aria-label="Yukarı Çık">
+    <button id="scroll-to-top-btn" class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(2rem+env(safe-area-inset-bottom))] right-4 md:bottom-8 md:right-8 z-50 p-2.5 md:p-3 bg-slate-800 dark:bg-slate-700 text-white rounded-full shadow-md hover:bg-slate-700 dark:hover:bg-slate-600 hover:-translate-y-1 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none focus:outline-none" aria-label="Yukarı Çık">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     </button>
 
@@ -436,22 +474,8 @@
         <span id="network-status-text" class="text-sm font-medium leading-tight"></span>
     </div>
 
-    <!-- PWA Yeni Sürüm (Uygulama Kapa/Aç) Prompt'u -->
-    <div id="pwa-update-prompt" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-4 transition-all duration-500 translate-y-24 opacity-0 pointer-events-none w-[90%] max-w-sm">
-        <div class="flex items-center gap-3">
-            <span class="text-2xl drop-shadow-md">✨</span>
-            <div class="flex flex-col">
-                <span class="text-sm font-bold text-slate-100">Yeni Sürüm Hazır!</span>
-                <span class="text-[11px] text-slate-400 leading-tight">Yenilikleri görmek için uygulamayı güncelleyin.</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-2 border-l border-slate-700 pl-4 ml-auto">
-            <button id="pwa-update-dismiss" class="text-xs font-medium text-slate-400 hover:text-white transition-colors px-2 py-1">Geç</button>
-            <button id="pwa-update-btn" class="text-xs font-bold bg-slate-100 text-slate-900 px-3 py-1.5 rounded-lg hover:bg-white transition-colors shadow-sm">Yenile</button>
-        </div>
-    </div>
 
-    <script type="module" src="/js/app.js"></script>
+    <script type="module" src="/js/app.js?v=2"></script>
 </body>
 </html>
 

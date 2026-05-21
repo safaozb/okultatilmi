@@ -1,66 +1,25 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'tatilmi-cache-v2';
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/css/style.css',
-    '/js/app.js',
-    '/js/config.js',
-    '/img/favicon.png',
-    '/img/banner.png'
-];
-
-// Kurulum aşamasında temel dosyaları önbelleğe al
+// Kurulum aşamasında beklemeden hemen aktif ol
 self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(urlsToCache))
-    );
+    self.skipWaiting();
 });
 
-// Aktifleştiğinde kontrolü hemen ele al
+// Aktifleştiğinde (Kullanıcı siteye girdiğinde) tüm eski önbellekleri (Cache) sil
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
-                cacheNames.map(cacheName => {
-                    // Mevcut CACHE_NAME ile eşleşmeyen tüm eski önbellekleri sil
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
+                cacheNames.map(cacheName => caches.delete(cacheName))
             );
         }).then(() => self.clients.claim())
     );
 });
 
-// İstek yakalama (Network First, Fallback to Cache stratejisi)
+// Fetch olayında cache kullanma, istekleri doğrudan ağa bırak
 self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') return;
-
-    event.respondWith(
-        fetch(event.request)
-            .then(response => {
-                // Başarılı yanıtları önbelleğe kopyala (Gelecekteki çevrimdışı durumlar için)
-                if (response && response.status === 200 && response.type === 'basic') {
-                    const responseToCache = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
-                }
-                return response;
-            })
-            .catch(() => {
-                return caches.match(event.request);
-            })
-    );
-});
-
-// Kullanıcıdan "Yenile" onayı geldiğinde beklemeyi atla ve yeni sürüme geç
-self.addEventListener('message', event => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
+    // Önbellek iptal edildi
 });
 
 // --- FIREBASE PUSH NOTIFICATION (Arka Plan Bildirimleri) ---

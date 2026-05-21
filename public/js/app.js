@@ -168,28 +168,33 @@ if (cityFilterContainer) {
         const filtered = options.filter(opt => opt.label.toLowerCase().includes(searchTerm.toLowerCase()));
         
         if (filtered.length === 0) {
-            cityFilterList.innerHTML = `<li class="px-3 py-2 text-slate-500 dark:text-slate-400 text-center">Sonuç bulunamadı</li>`;
+            cityFilterList.innerHTML = `<li class="px-4 py-3 text-slate-500 dark:text-slate-400 text-center">Sonuç bulunamadı</li>`;
             return;
         }
 
-            const fragment = document.createDocumentFragment();
+        const fragment = document.createDocumentFragment();
         filtered.forEach(opt => {
             const li = document.createElement('li');
-            li.className = `px-3 py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors ${selectedCity === opt.value ? 'bg-slate-100 dark:bg-slate-700 font-bold text-slate-900 dark:text-white' : ''}`;
+            li.className = `px-4 py-3 sm:py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 active:bg-slate-200 dark:active:bg-slate-600 text-slate-700 dark:text-slate-300 transition-colors border-b border-slate-100 dark:border-slate-700/50 last:border-0 ${selectedCity === opt.value ? 'bg-indigo-50 dark:bg-indigo-900/30 font-bold text-indigo-700 dark:text-indigo-300' : ''}`;
             li.textContent = opt.label;
-                li.dataset.value = opt.value;
-                li.dataset.label = opt.label;
-                fragment.appendChild(li);
+            li.dataset.value = opt.value;
+            li.dataset.label = opt.label;
+            fragment.appendChild(li);
         });
-            cityFilterList.appendChild(fragment);
+        cityFilterList.appendChild(fragment);
     };
 
     const closeDropdown = () => {
-        cityFilterMenu.classList.add('opacity-0', '-translate-y-2');
+        cityFilterMenu.classList.add('opacity-0', 'scale-95');
+        cityFilterMenu.classList.remove('scale-100');
+        const backdrop = document.getElementById('city-dropdown-backdrop');
+        if (backdrop) backdrop.classList.add('opacity-0');
+        
         setTimeout(() => {
             cityFilterMenu.classList.add('hidden');
             cityFilterMenu.classList.remove('flex');
-        }, 150);
+            if (backdrop) backdrop.classList.add('hidden');
+        }, 200);
     };
 
     const openDropdown = () => {
@@ -197,8 +202,13 @@ if (cityFilterContainer) {
         renderDropdownOptions();
         cityFilterMenu.classList.remove('hidden');
         cityFilterMenu.classList.add('flex');
+        const backdrop = document.getElementById('city-dropdown-backdrop');
+        if (backdrop) backdrop.classList.remove('hidden');
+        
         requestAnimationFrame(() => {
-            cityFilterMenu.classList.remove('opacity-0', '-translate-y-2');
+            cityFilterMenu.classList.remove('opacity-0', 'scale-95');
+            cityFilterMenu.classList.add('scale-100');
+            if (backdrop) backdrop.classList.remove('opacity-0');
             cityFilterSearch.focus();
         });
     };
@@ -232,8 +242,14 @@ if (cityFilterContainer) {
     });
 
     document.addEventListener('click', (e) => {
-        if (!cityFilterContainer.contains(e.target)) closeDropdown();
+        if (!cityFilterContainer.contains(e.target) && e.target.id !== 'city-dropdown-backdrop') closeDropdown();
     });
+    
+    const backdropEl = document.getElementById('city-dropdown-backdrop');
+    if(backdropEl) backdropEl.addEventListener('click', closeDropdown);
+    
+    const mobileCloseBtn = document.getElementById('city-dropdown-close-mobile');
+    if(mobileCloseBtn) mobileCloseBtn.addEventListener('click', (e) => { e.preventDefault(); closeDropdown(); });
 
     // Başlangıç değerini ayarla
     const initialOpt = options.find(o => o.value === selectedCity) || options[0];
@@ -862,6 +878,12 @@ themeToggleBtn.addEventListener('click', function() {
     // Temayı (class'ı) tersine çevir ve yeni durumu localStorage'a kaydet
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
+
+    // Tarayıcı çubuğu rengini yeni temaya uygun hale getir
+    const metaThemeColor = document.getElementById('meta-theme-color');
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', isDark ? '#0f172a' : '#f8fafc');
+    }
 });
 
 // Geçmiş Tatilleri Gizleme Filtresi Olayı
@@ -1071,6 +1093,63 @@ if (db) {
     }
 }
 
+// --- AKICI UYGULAMA DENEYİMİ (SMART NAVBAR) ---
+let lastScrollY = window.scrollY;
+const mainNavbar = document.getElementById('main-navbar');
+
+window.addEventListener('scroll', () => {
+    if (!mainNavbar) return;
+    const currentScrollY = window.scrollY;
+    
+    // Sadece mobilde navbar gizleme yapalım, daha ferah okuma alanı sağlar
+    if (window.innerWidth < 768) {
+        if (currentScrollY > lastScrollY && currentScrollY > 150) {
+            mainNavbar.classList.add('-translate-y-full'); // Aşağı kaydırırken gizle
+        } else {
+            mainNavbar.classList.remove('-translate-y-full'); // Yukarı kaydırırken göster
+        }
+    } else {
+        mainNavbar.classList.remove('-translate-y-full'); // Masaüstünde hep sabit kalsın
+    }
+    lastScrollY = currentScrollY;
+}, { passive: true });
+
+// --- MOBİL ALT NAVİGASYON (BOTTOM NAV) OLAYLARI ---
+const mobileNavWeatherBtn = document.getElementById('mobile-nav-weather-btn');
+if (mobileNavWeatherBtn) {
+    mobileNavWeatherBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const weatherBanner = document.getElementById('weather-banner-container');
+        const cityFilter = document.getElementById('city-dropdown-container');
+        
+        if (weatherBanner && !weatherBanner.classList.contains('hidden')) {
+            weatherBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (cityFilter) {
+            cityFilter.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (typeof showAppToast === 'function') showAppToast("Hava Durumu İzleme", "Hava durumunu görmek için listeden bir şehir seçin veya konumunuzu bulun.");
+        }
+    });
+}
+
+const mobileNavShareBtn = document.getElementById('mobile-nav-share-btn');
+if (mobileNavShareBtn) {
+    mobileNavShareBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const shareData = {
+            title: 'Okul Tatil Mi?',
+            text: 'Bugün okullar tatil mi? MEB takvimi ve anlık duyuruları buradan takip edebilirsin! 🎒✨',
+            url: window.location.origin
+        };
+        
+        if (navigator.canShare && navigator.canShare(shareData)) {
+            try { await navigator.share(shareData); } catch (err) { console.log('Mobil paylaşım menüsü kapandı.', err); }
+        } else {
+            const shareText = encodeURIComponent(`${shareData.text} \n👉 ${shareData.url}`);
+            window.open(`https://api.whatsapp.com/send?text=${shareText}`, '_blank');
+        }
+    });
+}
+
 // Uygulamayı Başlat
 initApp();
 
@@ -1195,14 +1274,6 @@ function initPushNotifications(swRegistration) {
 
 // --- PWA (Service Worker) KAYDI ---
 if ('serviceWorker' in navigator) {
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-            window.location.reload();
-            refreshing = true;
-        }
-    });
-
     window.addEventListener('load', () => {
         // config.js'den gelen bilgileri URL parametresine çevirip Service Worker'a aktarıyoruz
         const swConfigParams = new URLSearchParams(firebaseConfig).toString();
@@ -1210,29 +1281,6 @@ if ('serviceWorker' in navigator) {
             .then(registration => {
                 console.log('PWA ServiceWorker başarıyla kaydedildi.', registration.scope);
                 initPushNotifications(registration);
-                    
-                    // PWA Güncelleme Kontrolü (Yeni sürüm varsa Prompt göster)
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                const updatePrompt = document.getElementById('pwa-update-prompt');
-                                const updateBtn = document.getElementById('pwa-update-btn');
-                                const dismissBtn = document.getElementById('pwa-update-dismiss');
-                                
-                                if (updatePrompt) {
-                                    updatePrompt.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
-                                    updateBtn?.addEventListener('click', () => {
-                                        updatePrompt.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
-                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
-                                    });
-                                    dismissBtn?.addEventListener('click', () => {
-                                        updatePrompt.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
-                                    });
-                                }
-                            }
-                        });
-                    });
             })
             .catch(err => console.error('PWA ServiceWorker hatası:', err));
     });
