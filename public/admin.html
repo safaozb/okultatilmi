@@ -24,10 +24,14 @@
                         fadeIn: {
                             '0%': { opacity: '0', transform: 'translateY(10px)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        shimmer: {
+                            '100%': { transform: 'translateX(100%)' }
                         }
                     },
                     animation: {
-                        fadeIn: 'fadeIn 0.4s ease-out forwards'
+                        fadeIn: 'fadeIn 0.4s ease-out forwards',
+                        shimmer: 'shimmer 2s infinite'
                     }
                 }
             }
@@ -47,6 +51,24 @@
         }
         .animate-shake {
             animation: shake 0.4s ease-in-out;
+        }
+        
+        @keyframes hackerBlink {
+            0%, 100% { box-shadow: none; }
+            20%, 60% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.8), inset 0 0 10px rgba(244, 63, 94, 0.5); border-color: #f43f5e; color: #f43f5e; }
+            40%, 80% { box-shadow: none; border-color: #881337; color: #9f1239; }
+        }
+        .animate-hacker-error input {
+            animation: hackerBlink 0.5s ease-in-out forwards !important;
+            border-color: #f43f5e !important;
+            color: #f43f5e !important;
+        }
+        .animate-hacker-error input:focus {
+            --tw-ring-color: #f43f5e !important;
+            box-shadow: 0 0 0 2px var(--tw-ring-color), 0 0 15px rgba(244, 63, 94, 0.3) !important;
+        }
+        .animate-hacker-error div, .animate-hacker-error button {
+            color: #f43f5e !important;
         }
         
         /* Modern Scrollbar Tasarımı */
@@ -70,47 +92,121 @@
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 antialiased min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-900 text-slate-100 antialiased min-h-screen flex items-center justify-center p-4 select-none">
 
     <!-- Toast Bildirim Konteyneri -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
+    <!-- Matrix Arkaplanı (Hacker Efekti) -->
+    <canvas id="hacker-bg" class="fixed inset-0 w-full h-full z-0 opacity-25 pointer-events-none"></canvas>
+
     <!-- Kimlik Doğrulama Ekranı -->
-    <div id="login-section" class="w-full max-w-md bg-slate-800 p-8 rounded-3xl shadow-2xl shadow-black/40 border border-slate-700 transition-transform">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-sm">Yönetici Girişi</h1>
-            <p class="text-sm text-slate-400 mt-2">Sisteme erişmek için bilgilerinizi girin</p>
+    <div id="login-section" class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl shadow-[0_0_40px_rgba(16,185,129,0.15)] border border-emerald-500/30 transition-transform relative z-10">
+        <!-- Üstteki neon parlama efekti -->
+        <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-32 h-32 bg-emerald-500/20 blur-2xl rounded-full pointer-events-none"></div>
+
+        <div class="text-center mb-8 relative">
+            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600 tracking-tight drop-shadow-sm font-mono flex items-center justify-center gap-2">
+                <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                SYS_ADMIN<span class="animate-pulse text-emerald-500">_</span>
+            </h1>
+            <p class="text-[10px] text-emerald-500/70 mt-2 font-mono tracking-widest uppercase">Güvenlik Protokolü Aktif</p>
         </div>
-        <form id="login-form" class="space-y-4">
+        <form id="login-form" class="space-y-5 relative" novalidate>
             <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">E-posta</label>
-                <input type="email" id="email" required class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-slate-500 focus:outline-none">
+                <label class="block text-xs font-bold text-emerald-500 mb-1.5 font-mono uppercase tracking-wider">Sistem E-postası</label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-emerald-600 group-focus-within:text-emerald-400 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                    </div>
+                    <input type="email" id="email" required class="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-emerald-500/30 text-emerald-300 placeholder-emerald-800/50 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-all font-mono text-sm shadow-inner" placeholder="admin@system.local">
+                </div>
             </div>
             <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Şifre</label>
-                <div class="relative">
-                    <input type="password" id="password" required class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-slate-500 focus:outline-none pr-10">
-                    <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-white transition-colors focus:outline-none" aria-label="Şifreyi Göster/Gizle">
+                <label class="block text-xs font-bold text-emerald-500 mb-1.5 font-mono uppercase tracking-wider">Erişim Anahtarı</label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-emerald-600 group-focus-within:text-emerald-400 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <input type="password" id="password" required class="w-full pl-10 pr-10 py-2.5 bg-slate-950/80 border border-emerald-500/30 text-emerald-300 placeholder-emerald-800/50 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-all font-mono text-sm shadow-inner" placeholder="••••••••">
+                    <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-600 hover:text-emerald-400 transition-colors focus:outline-none" aria-label="Şifreyi Göster/Gizle">
                         <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         <svg id="eye-slash-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
                     </button>
                 </div>
             </div>
             
-            <div id="login-error-container" class="hidden bg-rose-900/30 border border-rose-800/50 text-rose-400 px-4 py-3 rounded-lg text-sm flex items-start gap-3 transition-opacity">
+            <div id="login-error-container" class="hidden bg-rose-950/80 border border-rose-500/50 text-rose-400 px-4 py-3 rounded-lg text-sm flex items-start gap-3 transition-opacity font-mono">
                 <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <div id="login-error-text" class="font-medium"></div>
+                <div id="login-error-text" class="font-medium tracking-tight"></div>
             </div>
-            <button type="submit" id="login-button" class="w-full bg-slate-700 text-white font-bold py-2 rounded-lg border border-slate-600 hover:bg-slate-600 transition flex items-center justify-center">
-                <span id="login-button-text">Giriş Yap</span>
-                <span id="login-spinner" class="hidden">
-                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <button type="submit" id="login-button" class="w-full bg-emerald-600/20 text-emerald-400 font-mono font-bold py-3 rounded-lg border border-emerald-500 hover:bg-emerald-500 hover:text-slate-900 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] flex items-center justify-center uppercase tracking-widest relative overflow-hidden group mt-2">
+                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent -translate-x-full group-hover:animate-shimmer"></span>
+                <span id="login-button-text">Sisteme Bağlan</span>
+                <span id="login-spinner" class="hidden ml-3">
+                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                 </span>
             </button>
         </form>
+
+        <script>
+            // Matrix Rain Effect (Sadece giriş ekranında çalışır, panele girince durur)
+            const canvas = document.getElementById('hacker-bg');
+            const ctx = canvas.getContext('2d');
+            
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+{}|:"<>?~`-=[]\\;\',./';
+            const fontSize = 14;
+            let columns = Math.floor(canvas.width / fontSize);
+            let drops = Array(columns).fill(1);
+            
+            window.addEventListener('resize', () => {
+                const newColumns = Math.floor(canvas.width / fontSize);
+                if (newColumns > columns) {
+                    drops = drops.concat(Array(newColumns - columns).fill(1));
+                }
+                columns = newColumns;
+            });
+
+            function drawMatrix() {
+                const loginSection = document.getElementById('login-section');
+                if (!loginSection) return;
+                
+                // Yönetici panele girdiğinde efekti kapatıp işlemci (CPU) yükünü sıfırlarız
+                if (loginSection.classList.contains('hidden')) {
+                    canvas.style.display = 'none';
+                    return;
+                } else {
+                    canvas.style.display = 'block';
+                }
+
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.1)'; // bg-slate-900 üzerinden iz bırakır
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#10b981'; // text-emerald-500
+                ctx.font = fontSize + 'px monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            setInterval(drawMatrix, 33);
+        </script>
     </div>
 
     <!-- Tatil Ekleme Paneli (Yalnızca giriş yapınca görünür) -->
@@ -139,7 +235,12 @@
         <div id="section-home" class="animate-fadeIn space-y-6">
             <div class="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-700/30 p-6 md:p-8 rounded-3xl shadow-lg relative overflow-hidden flex items-center justify-between">
                 <div class="relative z-10">
-                    <h2 class="text-2xl md:text-3xl font-black text-white mb-2 tracking-tight">Hoş Geldin, <span id="admin-welcome-name" class="text-indigo-400">Yönetici</span>! 👋</h2>
+                    <div class="flex items-center gap-3 mb-2">
+                        <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight">Hoş Geldin, <span id="admin-welcome-name" class="text-indigo-400">Yönetici</span>! 👋</h2>
+                        <button id="edit-profile-btn" class="p-1.5 bg-indigo-500/20 hover:bg-indigo-500/40 border border-indigo-500/30 rounded-xl text-indigo-300 transition-all focus:outline-none" title="Kullanıcı Adını Değiştir">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                    </div>
                     <p class="text-indigo-200/80 text-sm md:text-base max-w-2xl leading-relaxed">Okul Tatil Mi yönetim paneline hoş geldin. Buradan sistemdeki tüm tatilleri yönetebilir, 81 ilin hava durumunu inceleyebilir, anlık bildirimler gönderebilir ve sitenin ziyaretçi istatistiklerini takip edebilirsin.</p>
                 </div>
                 <div class="hidden sm:block relative z-10 opacity-80 pointer-events-none">
@@ -213,9 +314,15 @@
 
         <!-- Site Analiz Bölümü -->
         <div id="section-stats" class="hidden space-y-6 animate-fadeIn">
-            <div class="flex items-center gap-2 mb-4">
-                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                <h2 class="text-lg font-bold text-slate-100">Genel İstatistikler</h2>
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <h2 class="text-lg font-bold text-slate-100">Genel İstatistikler</h2>
+                </div>
+                <button id="export-excel-btn" class="flex items-center gap-2 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 rounded-lg text-xs font-semibold transition-all shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Excel İndir
+                </button>
             </div>
             <!-- Admin İstatistikleri -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
@@ -266,10 +373,21 @@
             </div>
             
             <!-- Grafik Alanı -->
-            <div class="bg-slate-900/50 border border-slate-700/50 p-5 md:p-6 rounded-2xl shadow-inner col-span-full transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+            <div class="bg-slate-900/50 border border-slate-700/50 p-5 md:p-6 rounded-2xl shadow-inner col-span-full lg:col-span-2 xl:col-span-3 transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
                 <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wider">Son 7 Günün Ziyaretçi Grafiği</h3>
                 <div class="relative h-64 sm:h-80 w-full">
                     <canvas id="visitor-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Şehir Dağılımı Alanı -->
+            <div class="bg-slate-900/50 border border-slate-700/50 p-5 md:p-6 rounded-2xl shadow-inner col-span-full lg:col-span-1 xl:col-span-2 transition-all duration-300 hover:border-slate-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Şehirlere Göre Abone Dağılımı</h3>
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Canlı Veri"></div>
+                </div>
+                <div id="city-stats-list" class="space-y-2.5 h-64 sm:h-80 overflow-y-auto custom-scrollbar pr-2 flex-1">
+                    <div class="flex items-center justify-center h-full text-slate-500 text-sm">Veriler toplanıyor...</div>
                 </div>
             </div>
             
@@ -365,12 +483,19 @@
                         <p class="text-xs text-slate-400 mb-4 leading-relaxed">Ana sayfanın en üstünde kayan yazı olarak görünecek acil durum veya bilgilendirme mesajını belirleyin.</p>
                         <div class="space-y-4">
                             <textarea id="announcement-text" rows="2" placeholder="Örn: Meteoroloji'den alınan son bilgilere göre yarın İstanbul'da yoğun kar yağışı bekleniyor..." class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 text-white placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-slate-500 focus:outline-none transition-all resize-none"></textarea>
-                            <div class="flex items-center justify-between">
+                        <div class="flex items-start justify-between">
+                            <div class="flex flex-col gap-3">
                                 <label class="inline-flex items-center cursor-pointer">
                                     <input type="checkbox" id="announcement-active" class="sr-only peer">
                                     <div class="relative w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-slate-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
                                     <span class="ms-3 text-sm font-medium text-slate-300">Duyuruyu Aktif Et</span>
                                 </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="announcement-winter-mode" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-slate-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+                                    <span class="ms-3 text-sm font-medium text-slate-300">Kış Modu (Kırmızı Alarm)</span>
+                                </label>
+                            </div>
                                 <button id="save-announcement-btn" class="px-4 py-2 bg-slate-700 border border-slate-600 hover:bg-slate-600 text-white text-sm font-bold rounded-xl transition-all shadow-sm">Kaydet</button>
                             </div>
                         </div>
@@ -389,6 +514,7 @@
                     <div class="flex justify-between items-center mb-6">
                         <h3 id="admin-calendar-month-year" class="text-lg font-bold text-slate-100 capitalize"></h3>
                         <div class="flex gap-2">
+                            <button type="button" id="admin-today-btn" class="hidden sm:block px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white border border-indigo-500/20 transition-all shadow-sm">Bugün</button>
                             <button type="button" id="admin-prev-month" class="p-2 rounded-xl bg-slate-800 border border-slate-600 hover:bg-slate-700 hover:border-slate-500 transition-all text-slate-300">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                             </button>
@@ -402,6 +528,11 @@
                     </div>
                     <div id="admin-calendar-grid" class="grid grid-cols-7 gap-1 md:gap-2">
                         <!-- Günler JS ile buraya eklenecek -->
+                    </div>
+                    <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-slate-400">
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500/20 border border-indigo-500/50"></span> Okul Tatili</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-sky-500/20 border border-sky-500/50"></span> Resmi Tatil</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-600 border border-slate-400"></span> Seçili Gün</div>
                     </div>
                     <div class="mt-5 flex items-start gap-2 text-xs text-slate-300 bg-slate-800 p-3 rounded-xl border border-slate-600">
                         <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -490,8 +621,9 @@
                             </label>
                         </div>
                         <div class="relative">
-                            <input type="text" id="admin-search-input" placeholder="Tatil ismine göre ara..." class="w-full bg-slate-800/80 border border-slate-600/50 text-white text-sm rounded-xl px-4 py-2.5 pl-10 focus:outline-none focus:border-slate-500 transition-colors placeholder-slate-500">
+                            <input type="text" id="admin-search-input" placeholder="Tatil ismine göre ara..." class="w-full bg-slate-800/80 border border-slate-600/50 text-white text-sm rounded-xl px-4 py-2.5 pl-10 pr-10 focus:outline-none focus:border-slate-500 transition-colors placeholder-slate-500">
                             <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <button id="admin-search-clear" class="absolute right-3.5 top-3 w-4 h-4 text-slate-400 hover:text-slate-200 hidden transition-colors" title="Aramayı Temizle"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                         </div>
                     </div>
                 
@@ -620,6 +752,36 @@
     <div id="network-status-banner" class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl transition-all duration-500 -translate-y-32 opacity-0 pointer-events-none backdrop-blur-md border">
         <div id="network-status-icon"></div>
         <span id="network-status-text" class="text-sm font-medium leading-tight"></span>
+    </div>
+
+    <!-- Profil Düzenleme Modalı -->
+    <div id="edit-profile-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <div id="edit-profile-modal-backdrop" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity opacity-0 duration-300"></div>
+        <div id="edit-profile-modal-content" class="relative w-full max-w-sm bg-slate-800 border border-slate-700 rounded-3xl shadow-2xl p-6 transform scale-95 opacity-0 transition-all duration-300">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center ring-4 ring-indigo-500/10">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-100">Kullanıcı Adını Değiştir</h3>
+                </div>
+                <form id="edit-profile-form" class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Yeni Görünen Adınız</label>
+                        <input type="text" id="new-display-name" required placeholder="Örn: Safa Hoca" class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 text-white placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
+                    </div>
+                </form>
+                <div class="flex w-full gap-3">
+                    <button type="button" id="cancel-edit-profile-btn" class="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl transition-colors shadow-sm">İptal</button>
+                    <button type="button" id="confirm-edit-profile-btn" class="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors shadow-sm shadow-indigo-600/20 flex items-center justify-center">
+                        <span id="confirm-edit-profile-text">Kaydet</span>
+                        <span id="confirm-edit-profile-spinner" class="hidden ml-2">
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="/js/admin.js?v=2"></script>

@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, getDoc, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { firebaseConfig, initialHolidays } from "./config.js";
 
@@ -299,12 +299,14 @@ function renderAdminCalendar() {
         
         let isHolidayDate = false;
         let holidayName = "";
+        let holidayType = "";
         for (const h of adminHolidaysData) {
             const s = new Date(`${h.start}T00:00:00`).getTime();
             const e = new Date(`${h.end}T23:59:59`).getTime();
             if (date >= s && date <= e) {
                 isHolidayDate = true;
                 holidayName = h.name;
+                holidayType = h.type;
                 break;
             }
         }
@@ -326,7 +328,11 @@ function renderAdminCalendar() {
         } else if (isInRange) {
             dayClass += "bg-slate-700/50 text-slate-300";
         } else if (isHolidayDate) {
-            dayClass += "bg-slate-800 border border-slate-600 text-slate-400";
+            if (holidayType === 'meb') {
+                dayClass += "bg-indigo-500/20 border border-indigo-500/50 text-indigo-300";
+            } else {
+                dayClass += "bg-sky-500/20 border border-sky-500/50 text-sky-300";
+            }
         } else {
             dayClass += "text-slate-300 hover:bg-slate-700";
         }
@@ -638,8 +644,14 @@ onAuthStateChanged(auth, async (user) => {
         // Canlı Duyuru Durumunu Çek
         announcementUnsubscribe = onSnapshot(doc(db, "site_settings", "announcement"), (docSnap) => {
             if (docSnap.exists()) {
-                document.getElementById('announcement-text').value = docSnap.data().text || "";
-                document.getElementById('announcement-active').checked = docSnap.data().isActive || false;
+                const textEl = document.getElementById('announcement-text');
+                const activeEl = document.getElementById('announcement-active');
+                const winterEl = document.getElementById('announcement-winter-mode');
+                const data = docSnap.data();
+
+                if (textEl) textEl.value = data.text || "";
+                if (activeEl) activeEl.checked = data.isActive || false;
+                if (winterEl) winterEl.checked = data.isWinterMode || false;
             }
         });
 
@@ -660,7 +672,10 @@ onAuthStateChanged(auth, async (user) => {
                         <div class="pr-2">
                             <h4 class="text-sm font-bold text-slate-200 flex items-center">${data.title} ${cityBadge}</h4>
                             <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">${data.body}</p>
-                            <span class="text-[10px] text-slate-500 mt-2 block font-medium">${data.dateStr}</span>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="text-[10px] text-slate-500 font-medium">${data.dateStr}</span>
+                                ${data.senderName ? `<span class="text-[10px] bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/20 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>${data.senderName}</span>` : ''}
+                            </div>
                         </div>
                         <button data-id="${docSnap.id}" class="delete-notification-btn p-2 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 rounded-lg transition-colors shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100" title="Siteden Kaldır">
                             <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -803,8 +818,13 @@ function renderHolidays(holidays) {
         const isPastHoliday = new Date(holiday.end).getTime() < todayTime;
         const opacityClass = isPastHoliday ? "opacity-60 grayscale hover:grayscale-0" : "";
         
+        const isMeb = holiday.type === 'meb';
+        const dotColor = isMeb ? "bg-indigo-500 shadow-sm shadow-indigo-500/40" : "bg-sky-500 shadow-sm shadow-sky-500/40";
+        const borderHoverClass = isMeb ? "hover:border-indigo-500/50" : "hover:border-sky-500/50";
+        const typeBadge = isMeb ? '<span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded text-[10px] tracking-wide">Okul Tatili</span>' : '<span class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded text-[10px] tracking-wide">Resmi Tatil</span>';
+
         const div = document.createElement("div");
-        div.className = `flex flex-col sm:flex-row gap-3 justify-between sm:items-center bg-slate-800/80 border border-slate-600/50 p-3.5 rounded-xl hover:border-slate-500 transition-all group ${opacityClass}`;
+        div.className = `flex flex-col sm:flex-row gap-3 justify-between sm:items-center bg-slate-800/80 border border-slate-600/50 p-3.5 rounded-xl transition-all group ${borderHoverClass} ${opacityClass}`;
         
         let actionButtons = "";
         if (holiday.isSystem) {
@@ -832,8 +852,9 @@ function renderHolidays(holidays) {
                     ${holiday.status === 'postponed' ? '<span class="text-[9px] bg-amber-900/80 text-amber-300 px-1.5 py-0.5 rounded tracking-wide border border-amber-700/50">ERTELENDİ</span>' : ''}
                 </h4>
                 <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                    <span class="inline-block w-2 h-2 rounded-full bg-slate-500"></span>
+                    <span class="inline-block w-2 h-2 rounded-full ${dotColor}"></span>
                     <span class="font-medium">${holiday.start} / ${holiday.end}</span>
+                    ${typeBadge}
                     ${holiday.city && holiday.city !== 'genel' ? `<span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded border border-slate-600">📍 ${holiday.city}</span>` : ''}
                     <span class="text-slate-500">(${holiday.duration})</span>
                 </div>
@@ -866,11 +887,17 @@ function renderHolidays(holidays) {
                 const listItem = e.target.closest('.group');
                 if (listItem) listItem.classList.add('is-editing', 'ring-2', 'ring-slate-500');
 
-                document.getElementById("h-name").value = holiday.name;
-                document.getElementById("h-start").value = holiday.start;
-                document.getElementById("h-end").value = holiday.end;
-                document.getElementById("h-duration").value = holiday.duration;
-                document.getElementById("h-type").value = holiday.type;
+                const hName = document.getElementById("h-name");
+                const hStart = document.getElementById("h-start");
+                const hEnd = document.getElementById("h-end");
+                const hDuration = document.getElementById("h-duration");
+                const hType = document.getElementById("h-type");
+                
+                if (hName) hName.value = holiday.name;
+                if (hStart) hStart.value = holiday.start;
+                if (hEnd) hEnd.value = holiday.end;
+                if (hDuration) hDuration.value = holiday.duration;
+                if (hType) hType.value = holiday.type;
                 if (document.getElementById("h-status")) document.getElementById("h-status").value = holiday.status || "active";
                 if (typeof setAdminCityDropdownValue === 'function') {
                     setAdminCityDropdownValue(holiday.city || "genel");
@@ -880,7 +907,8 @@ function renderHolidays(holidays) {
                 selectedEndDate = holiday.end;
                 renderAdminCalendar();
 
-                document.getElementById("add-holiday-form").scrollIntoView({behavior: "smooth"});
+                const addForm = document.getElementById("add-holiday-form");
+                if (addForm) addForm.scrollIntoView({behavior: "smooth"});
                 const submitSpan = document.querySelector("#add-holiday-form button[type='submit'] span");
                 if (submitSpan) {
                     submitSpan.textContent = editHolidayId ? "Tatili Güncelle" : "Yeni Olarak Kaydet (Sistemin Üzerine Yaz)";
@@ -911,116 +939,261 @@ if (adminFilterPastToggle) {
 
 // Arama Barı Olayı
 const adminSearchInput = document.getElementById('admin-search-input');
+const adminSearchClear = document.getElementById('admin-search-clear');
 if (adminSearchInput) {
     adminSearchInput.addEventListener('input', () => {
+        if (adminSearchClear) adminSearchClear.classList.toggle('hidden', adminSearchInput.value.length === 0);
         renderHolidays(adminHolidaysData);
     });
+    if (adminSearchClear) {
+        adminSearchClear.addEventListener('click', () => {
+            adminSearchInput.value = '';
+            adminSearchClear.classList.add('hidden');
+            renderHolidays(adminHolidaysData);
+        });
+    }
 }
 
 // Admin Girişi
-loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const errorContainer = document.getElementById("login-error-container");
-    const errorText = document.getElementById("login-error-text");
+if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const errorContainer = document.getElementById("login-error-container");
+        const errorText = document.getElementById("login-error-text");
 
-    // Butonu devre dışı bırak, spinner'ı göster
-    loginButton.disabled = true;
-    loginButton.classList.add("opacity-75", "cursor-not-allowed");
-    loginButtonText.classList.add("hidden");
-    loginSpinner.classList.remove("hidden");
-    errorContainer.classList.add("hidden");
-    
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        loginForm.reset();
-    } catch (error) {
-        let errorMsg = "Giriş başarısız. Bir hata oluştu.";
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-            errorMsg = "E-posta veya şifre hatalı. Lütfen kontrol edin.";
-        } else if (error.code === 'auth/too-many-requests') {
-            errorMsg = "Çok fazla başarısız deneme yapıldı. Lütfen daha sonra tekrar deneyin.";
-        } else if (error.code === 'auth/invalid-email') {
-            errorMsg = "Lütfen geçerli bir e-posta adresi girin.";
+        // Tarayıcının varsayılan uyarı baloncuğunu ezip kendi modern hacker uyarımızı (Toast) gösteriyoruz
+        if (!email || !email.includes('@') || !password) {
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            
+            loginSection.classList.remove("animate-shake");
+            void loginSection.offsetWidth;
+            loginSection.classList.add("animate-shake");
+
+            const triggerError = (inputEl, msg) => {
+                showToast(msg, "error");
+                const group = inputEl.parentElement;
+                group.classList.remove("animate-hacker-error");
+                void group.offsetWidth;
+                group.classList.add("animate-hacker-error");
+                inputEl.addEventListener('input', function clearErr() {
+                    group.classList.remove("animate-hacker-error");
+                    inputEl.removeEventListener('input', clearErr);
+                });
+            };
+
+            if (!email) return triggerError(emailInput, "Sistem e-postası boş bırakılamaz.");
+            if (!email.includes('@')) return triggerError(emailInput, "Geçersiz format: E-posta adresi '@' işareti içermelidir.");
+            if (!password) return triggerError(passwordInput, "Erişim anahtarı (şifre) boş bırakılamaz.");
+            
+            return;
         }
+
+        // Butonu devre dışı bırak, spinner'ı göster
+        loginButton.disabled = true;
+        loginButton.classList.add("opacity-75", "cursor-not-allowed");
+        loginButtonText.classList.add("hidden");
+        loginSpinner.classList.remove("hidden");
+        errorContainer.classList.add("hidden");
         
-        errorText.textContent = errorMsg;
-        errorContainer.classList.remove("hidden");
-        
-        // Hata animasyonunu tetikle (Shake efekti)
-        loginSection.classList.remove("animate-shake");
-        void loginSection.offsetWidth; // Reflow tetikle
-        loginSection.classList.add("animate-shake");
-    } finally {
-        // Butonu tekrar etkinleştir, spinner'ı gizle
-        loginButton.disabled = false;
-        loginButton.classList.remove("opacity-75", "cursor-not-allowed");
-        loginButtonText.classList.remove("hidden");
-        loginSpinner.classList.add("hidden");
-    }
-});
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            loginForm.reset();
+        } catch (error) {
+            let errorMsg = "Giriş başarısız. Bir hata oluştu.";
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                errorMsg = "E-posta veya şifre hatalı. Lütfen kontrol edin.";
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMsg = "Çok fazla başarısız deneme yapıldı. Lütfen daha sonra tekrar deneyin.";
+            } else if (error.code === 'auth/invalid-email') {
+                errorMsg = "Lütfen geçerli bir e-posta adresi girin.";
+            }
+            
+            errorText.textContent = errorMsg;
+            errorContainer.classList.remove("hidden");
+            
+            // Hata animasyonunu tetikle (Shake efekti)
+            loginSection.classList.remove("animate-shake");
+            void loginSection.offsetWidth; // Reflow tetikle
+            loginSection.classList.add("animate-shake");
+            
+            // Hacker temalı kırmızı yanıp sönme (Glitch) efekti
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            if (emailInput && passwordInput) {
+                const emailGroup = emailInput.parentElement;
+                const passwordGroup = passwordInput.parentElement;
+                
+                emailGroup.classList.remove("animate-hacker-error");
+                passwordGroup.classList.remove("animate-hacker-error");
+                void emailGroup.offsetWidth;
+                void passwordGroup.offsetWidth;
+                emailGroup.classList.add("animate-hacker-error");
+                passwordGroup.classList.add("animate-hacker-error");
+
+                // Kullanıcı tekrar yazmaya başladığında kırmızı kilit durumunu kaldır
+                const clearHackerError = () => {
+                    emailGroup.classList.remove("animate-hacker-error");
+                    passwordGroup.classList.remove("animate-hacker-error");
+                    emailInput.removeEventListener('input', clearHackerError);
+                    passwordInput.removeEventListener('input', clearHackerError);
+                };
+                emailInput.addEventListener('input', clearHackerError);
+                passwordInput.addEventListener('input', clearHackerError);
+            }
+        } finally {
+            // Butonu tekrar etkinleştir, spinner'ı gizle
+            loginButton.disabled = false;
+            loginButton.classList.remove("opacity-75", "cursor-not-allowed");
+            loginButtonText.classList.remove("hidden");
+            loginSpinner.classList.add("hidden");
+        }
+    });
+}
+
+// --- EXCEL (CSV) RAPOR İNDİRME SİSTEMİ ---
+const exportExcelBtn = document.getElementById('export-excel-btn');
+if (exportExcelBtn) {
+    exportExcelBtn.addEventListener('click', () => {
+        try {
+            // 1. Genel İstatistik Kartlarındaki Verileri Al
+            const totalHolidays = document.getElementById('stat-total')?.textContent.trim() || '0';
+            const upcomingHolidays = document.getElementById('stat-upcoming')?.textContent.trim() || '0';
+            const totalVisitors = document.getElementById('stat-total-visitors')?.textContent.trim().replace(/\./g, '') || '0';
+            const todayVisitors = document.getElementById('stat-today-visitors')?.textContent.trim().replace(/\./g, '') || '0';
+            const subscribers = document.getElementById('stat-subscribers')?.textContent.trim().replace(/\./g, '') || '0';
+
+            let csvContent = "--- GENEL ISTATISTIKLER ---\n";
+            csvContent += `Toplam Tatil,${totalHolidays}\n`;
+            csvContent += `Yaklasan Tatil,${upcomingHolidays}\n`;
+            csvContent += `Toplam Ziyaret,${totalVisitors}\n`;
+            csvContent += `Bugunku Ziyaret,${todayVisitors}\n`;
+            csvContent += `Bildirim Abonesi,${subscribers}\n\n`;
+
+            // 2. 7 Günlük Ziyaretçi Grafiğinden Verileri Çek
+            csvContent += "--- SON 7 GUNLUK ZIYARETCILER ---\n";
+            csvContent += "Tarih,Ziyaretci Sayisi\n";
+            if (visitorChart && visitorChart.data) {
+                const labels = visitorChart.data.labels;
+                const data = visitorChart.data.datasets[0].data;
+                for (let i = 0; i < labels.length; i++) {
+                    csvContent += `${labels[i]},${data[i]}\n`;
+                }
+            }
+            csvContent += "\n";
+
+            // 3. 24 Saatlik Ziyaretçi Grafiğinden Verileri Çek
+            csvContent += "--- BUGUNUN SAATLIK ZIYARETCILERI ---\n";
+            csvContent += "Saat,Ziyaretci Sayisi\n";
+            if (hourlyChart && hourlyChart.data) {
+                const labels = hourlyChart.data.labels;
+                const data = hourlyChart.data.datasets[0].data;
+                for (let i = 0; i < labels.length; i++) {
+                    csvContent += `${labels[i]},${data[i]}\n`;
+                }
+            }
+
+            // 4. Şehirlere Göre Dağılım Listesi
+            const cityListItems = document.querySelectorAll('#city-stats-list > div');
+            if (cityListItems.length > 0) {
+                csvContent += "\n--- SEHRE GORE ABONE DAGILIMI ---\n";
+                csvContent += "Sehir,Kisi Sayisi\n";
+                cityListItems.forEach(item => {
+                    const cityNameEl = item.querySelector('p.font-bold');
+                    const countEl = item.querySelector('span.font-black');
+                    if (cityNameEl && countEl) {
+                        csvContent += `${cityNameEl.textContent},${countEl.textContent}\n`;
+                    }
+                });
+            }
+
+            // UTF-8 BOM ekleyelim ki Excel, varsa Türkçe karakterleri tanısın
+            const bom = "\uFEFF";
+            const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            // Sanal bir link oluştur ve dosyayı indir
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Site_Raporu_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '_')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast("Excel raporu başarıyla cihazınıza indirildi!", "success");
+        } catch (error) {
+            console.error("Excel indirme hatası:", error);
+            showToast("Rapor oluşturulurken bir hata meydana geldi.", "error");
+        }
+    });
+}
 
 // Admin Çıkışı
-logoutBtn.addEventListener("click", () => signOut(auth));
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => signOut(auth));
+}
 
 // Yeni Tatil Ekleme
-addHolidayForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const btn = addHolidayForm.querySelector("button[type='submit']");
-    const submitSpan = btn.querySelector("span") || btn;
-    
-    btn.disabled = true;
-    const originalText = submitSpan.textContent;
-    submitSpan.textContent = "Kaydediliyor...";
+if (addHolidayForm) {
+    addHolidayForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = addHolidayForm.querySelector("button[type='submit']");
+        const submitSpan = btn.querySelector("span") || btn;
+        
+        btn.disabled = true;
+        const originalText = submitSpan.textContent;
+        submitSpan.textContent = "Kaydediliyor...";
 
-    const newHoliday = {
-        name: document.getElementById("h-name").value,
-        start: document.getElementById("h-start").value,
-        end: document.getElementById("h-end").value,
-        duration: document.getElementById("h-duration").value,
-        type: document.getElementById("h-type").value,
-        status: document.getElementById("h-status") ? document.getElementById("h-status").value : "active",
-        city: document.getElementById("h-city") ? document.getElementById("h-city").value : "genel"
-    };
-    
-    if (overrideSystemStart) {
-        newHoliday.originalStart = overrideSystemStart;
-    }
-
-    try {
-        if (editHolidayId) {
-            await updateDoc(doc(db, "custom_holidays", editHolidayId), newHoliday);
-            showToast("Tatil başarıyla güncellendi!", "success");
-            editHolidayId = null;
-        } else {
-            await addDoc(collection(db, "custom_holidays"), newHoliday);
-            showToast("Tatil başarıyla kaydedildi!", "success");
+        const newHoliday = {
+            name: document.getElementById("h-name").value,
+            start: document.getElementById("h-start").value,
+            end: document.getElementById("h-end").value,
+            duration: document.getElementById("h-duration").value,
+            type: document.getElementById("h-type").value,
+            status: document.getElementById("h-status") ? document.getElementById("h-status").value : "active",
+            city: document.getElementById("h-city") ? document.getElementById("h-city").value : "genel"
+        };
+        
+        if (overrideSystemStart) {
+            newHoliday.originalStart = overrideSystemStart;
         }
-        addHolidayForm.reset();
-        selectedStartDate = null;
-        selectedEndDate = null;
+
+        try {
+            if (editHolidayId) {
+                await updateDoc(doc(db, "custom_holidays", editHolidayId), newHoliday);
+                showToast("Tatil başarıyla güncellendi!", "success");
+                editHolidayId = null;
+            } else {
+                await addDoc(collection(db, "custom_holidays"), newHoliday);
+                showToast("Tatil başarıyla kaydedildi!", "success");
+            }
+            addHolidayForm.reset();
+            selectedStartDate = null;
+            selectedEndDate = null;
+            overrideSystemStart = null;
+            renderAdminCalendar(); // Takvimi de temizle
+        } catch (error) {
+            showToast("Veri eklenirken hata oluştu: Firebase bağlantınızı kontrol edin.", "error");
+            console.error(error);
+        } finally {
+            btn.disabled = false;
+            submitSpan.textContent = "Tatili Kaydet ve Yayınla";
+        }
+    });
+
+    addHolidayForm.addEventListener("reset", () => {
+        editHolidayId = null;
         overrideSystemStart = null;
-        renderAdminCalendar(); // Takvimi de temizle
-    } catch (error) {
-        showToast("Veri eklenirken hata oluştu: Firebase bağlantınızı kontrol edin.", "error");
-        console.error(error);
-    } finally {
-        btn.disabled = false;
-        submitSpan.textContent = "Tatili Kaydet ve Yayınla";
-    }
-});
+        const submitSpan = addHolidayForm.querySelector("button[type='submit'] span");
+        
+        document.querySelectorAll('.is-editing').forEach(el => el.classList.remove('is-editing', 'ring-2', 'ring-slate-500'));
 
-addHolidayForm.addEventListener("reset", () => {
-    editHolidayId = null;
-    overrideSystemStart = null;
-    const submitSpan = addHolidayForm.querySelector("button[type='submit'] span");
-    
-    document.querySelectorAll('.is-editing').forEach(el => el.classList.remove('is-editing', 'ring-2', 'ring-slate-500'));
-
-    if (submitSpan) submitSpan.textContent = "Tatili Kaydet ve Yayınla";
-    if (typeof setAdminCityDropdownValue === 'function') setAdminCityDropdownValue('genel');
-});
+        if (submitSpan) submitSpan.textContent = "Tatili Kaydet ve Yayınla";
+        if (typeof setAdminCityDropdownValue === 'function') setAdminCityDropdownValue('genel');
+    });
+}
 
 // --- BİLDİRİM (PUSH) GÖNDERME İSTEĞİ (MODAL SİSTEMİ) ---
 const sendPushBtn = document.getElementById('send-push-btn');
@@ -1092,6 +1265,8 @@ if (confirmPushBtn) {
         const pushSendDeviceCheckbox = document.getElementById('push-send-device');
         const sendToDevice = pushSendDeviceCheckbox ? pushSendDeviceCheckbox.checked : true;
         const targetCity = pushCitySelect ? pushCitySelect.value : "all";
+        
+        const senderName = auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email.split('@')[0]) : "Yönetici";
 
         try {
             if (sendToDevice) {
@@ -1100,7 +1275,8 @@ if (confirmPushBtn) {
                     body: body,
                     targetCity: targetCity,
                     timestamp: new Date().toISOString(),
-                    status: "pending"
+                    status: "pending",
+                    senderName: senderName
                 });
             }
             
@@ -1110,7 +1286,8 @@ if (confirmPushBtn) {
                 body: body,
                 targetCity: targetCity,
                 timestamp: new Date().getTime(),
-                dateStr: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                dateStr: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                senderName: senderName
             });
             
             showToast(sendToDevice ? "Bildirim cihazlara gönderildi ve siteye eklendi!" : "Bildirim sadece siteye eklendi!", "success");
@@ -1130,14 +1307,19 @@ const saveAnnouncementBtn = document.getElementById('save-announcement-btn');
 if (saveAnnouncementBtn) {
     saveAnnouncementBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        const text = document.getElementById('announcement-text').value.trim();
-        const isActive = document.getElementById('announcement-active').checked;
+        const textEl = document.getElementById('announcement-text');
+        const activeEl = document.getElementById('announcement-active');
+        const winterEl = document.getElementById('announcement-winter-mode');
+
+        const text = textEl ? textEl.value.trim() : "";
+        const isActive = activeEl ? activeEl.checked : false;
+        const isWinterMode = winterEl ? winterEl.checked : false;
 
         saveAnnouncementBtn.disabled = true;
         saveAnnouncementBtn.textContent = "Kyd...";
 
         try {
-            await setDoc(doc(db, "site_settings", "announcement"), { text: text, isActive: isActive }, { merge: true });
+            await setDoc(doc(db, "site_settings", "announcement"), { text: text, isActive: isActive, isWinterMode: isWinterMode }, { merge: true });
             showToast("Duyuru yayına alındı!", "success");
         } catch (err) {
             showToast("Duyuru kaydedilemedi.", "error");
@@ -1242,6 +1424,14 @@ const adminNextMonthBtn = document.getElementById('admin-next-month');
 const hStartInput = document.getElementById("h-start");
 const hEndInput = document.getElementById("h-end");
 
+const adminTodayBtn = document.getElementById('admin-today-btn');
+if (adminTodayBtn) adminTodayBtn.addEventListener('click', () => {
+    const now = new Date();
+    currentAdminMonth = now.getMonth();
+    currentAdminYear = now.getFullYear();
+    renderAdminCalendar();
+});
+
 if (adminPrevMonthBtn) adminPrevMonthBtn.addEventListener('click', () => {
     currentAdminMonth--;
     if (currentAdminMonth < 0) { currentAdminMonth = 11; currentAdminYear--; }
@@ -1257,6 +1447,7 @@ if (adminNextMonthBtn) adminNextMonthBtn.addEventListener('click', () => {
 // Inputlardan elle tarih girilirse takvimi ona göre boya
 if (hStartInput) hStartInput.addEventListener("change", (e) => { 
     selectedStartDate = e.target.value; 
+    if (hEndInput) hEndInput.min = selectedStartDate; // Bitiş tarihi başlangıçtan önce seçilemesin
     if(selectedEndDate && new Date(selectedStartDate) > new Date(selectedEndDate)) {
         selectedEndDate = selectedStartDate;
         hEndInput.value = selectedStartDate;
@@ -1549,10 +1740,100 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// ESC tuşu ile açık olan modal/dropdown pencerelerini kapatma (Kullanılabilirlik artışı)
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        if (deleteModal && !deleteModal.classList.contains('hidden')) closeDeleteModal();
+        if (deleteNotificationModal && !deleteNotificationModal.classList.contains('hidden')) closeDeleteNotificationModal();
+        if (pushModal && !pushModal.classList.contains('hidden')) closePushModal();
+        if (editProfileModal && !editProfileModal.classList.contains('hidden')) closeEditProfileModal();
+        if (adminCityMenu && !adminCityMenu.classList.contains('hidden')) closeAdminDropdown();
+    }
+});
+
+// Kopyalama, Kesme, Yapıştırma ve Sürükleme Engelleme (Sadece manuel yazmaya izin ver)
+document.addEventListener('copy', (e) => e.preventDefault());
+document.addEventListener('cut', (e) => e.preventDefault());
+document.addEventListener('paste', (e) => e.preventDefault());
+document.addEventListener('dragstart', (e) => e.preventDefault());
+document.addEventListener('drop', (e) => e.preventDefault());
+
 // --- PWA (Service Worker) KAYDI VE GÜNCELLEME KONTROLÜ ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         const swConfigParams = new URLSearchParams(firebaseConfig).toString();
         navigator.serviceWorker.register(`/sw.js?${swConfigParams}`);
+    });
+}
+
+// --- PROFİL DÜZENLEME (KULLANICI ADI DEĞİŞTİRME) SİSTEMİ ---
+const editProfileBtn = document.getElementById('edit-profile-btn');
+const editProfileModal = document.getElementById('edit-profile-modal');
+const editProfileBackdrop = document.getElementById('edit-profile-modal-backdrop');
+const editProfileContent = document.getElementById('edit-profile-modal-content');
+const cancelEditProfileBtn = document.getElementById('cancel-edit-profile-btn');
+const confirmEditProfileBtn = document.getElementById('confirm-edit-profile-btn');
+const newDisplayNameInput = document.getElementById('new-display-name');
+const confirmEditProfileText = document.getElementById('confirm-edit-profile-text');
+const confirmEditProfileSpinner = document.getElementById('confirm-edit-profile-spinner');
+
+function openEditProfileModal() {
+    if (auth.currentUser) {
+        newDisplayNameInput.value = auth.currentUser.displayName || auth.currentUser.email.split('@')[0];
+    }
+    editProfileModal.classList.remove("hidden");
+    editProfileModal.classList.add("flex");
+    setTimeout(() => {
+        editProfileBackdrop.classList.remove("opacity-0");
+        editProfileContent.classList.remove("scale-95", "opacity-0");
+    }, 10);
+}
+
+function closeEditProfileModal() {
+    editProfileBackdrop.classList.add("opacity-0");
+    editProfileContent.classList.add("scale-95", "opacity-0");
+    setTimeout(() => {
+        editProfileModal.classList.add("hidden");
+        editProfileModal.classList.remove("flex");
+        confirmEditProfileBtn.disabled = false;
+        confirmEditProfileText.textContent = "Kaydet";
+        confirmEditProfileSpinner.classList.add("hidden");
+        confirmEditProfileBtn.classList.remove("cursor-not-allowed", "opacity-75");
+    }, 300);
+}
+
+if (editProfileBtn) editProfileBtn.addEventListener('click', openEditProfileModal);
+if (cancelEditProfileBtn) cancelEditProfileBtn.addEventListener('click', closeEditProfileModal);
+
+if (confirmEditProfileBtn) {
+    confirmEditProfileBtn.addEventListener('click', async () => {
+        const newName = newDisplayNameInput.value.trim();
+        if (!newName) {
+            showToast("Lütfen geçerli bir kullanıcı adı girin.", "warning");
+            return;
+        }
+
+        confirmEditProfileBtn.disabled = true;
+        confirmEditProfileBtn.classList.add("cursor-not-allowed", "opacity-75");
+        confirmEditProfileText.textContent = "Kaydediliyor...";
+        confirmEditProfileSpinner.classList.remove("hidden");
+
+        try {
+            await updateProfile(auth.currentUser, { displayName: newName });
+            showToast("Kullanıcı adınız başarıyla güncellendi!", "success");
+            
+            const welcomeNameEl = document.getElementById('admin-welcome-name');
+            if (welcomeNameEl) {
+                welcomeNameEl.textContent = newName.charAt(0).toUpperCase() + newName.slice(1);
+            }
+            closeEditProfileModal();
+        } catch (error) {
+            showToast("Kullanıcı adı güncellenirken bir hata oluştu.", "error");
+            console.error("Profile update error:", error);
+            confirmEditProfileBtn.disabled = false;
+            confirmEditProfileBtn.classList.remove("cursor-not-allowed", "opacity-75");
+            confirmEditProfileText.textContent = "Kaydet";
+            confirmEditProfileSpinner.classList.add("hidden");
+        }
     });
 }

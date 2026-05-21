@@ -316,8 +316,12 @@ if (geoLocationBtn) {
 // Countdown Logic
 function updateCountdown() {
     const labelEl = document.getElementById('next-holiday-label');
+    const countdownEl = document.getElementById('countdown');
+
+    if (!countdownEl) return;
+
     if (!nextHoliday) {
-        document.getElementById('countdown').innerHTML = "<span class='text-slate-500 dark:text-slate-400 text-base'>Yaklaşan tatil bulunmamaktadır.</span>";
+        countdownEl.innerHTML = "<span class='text-slate-500 dark:text-slate-400 text-base'>Yaklaşan tatil bulunmamaktadır.</span>";
         if (labelEl) labelEl.textContent = "Tatiller Bitti";
         return;
     }
@@ -339,7 +343,7 @@ function updateCountdown() {
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-    document.getElementById('countdown').innerHTML = 
+    countdownEl.innerHTML = 
         `<span class="font-bold text-slate-900 dark:text-white">${days}</span> Gün 
          <span class="font-bold text-slate-900 dark:text-white">${hours}</span> Saat 
          <span class="font-bold text-slate-900 dark:text-white">${minutes}</span> Dakika`;
@@ -743,7 +747,11 @@ function renderCalendar() {
         let dayClass = "w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 mx-auto flex items-center justify-center rounded-full text-slate-700 dark:text-slate-200 transition-all cursor-default relative group text-[10px] sm:text-sm md:text-base";
         
         if (isHolidayDate) {
-            dayClass += ` bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 font-bold border-2 border-slate-800 dark:border-slate-200 shadow-sm z-10 hover:scale-110 hover:z-20 cursor-help`;
+            if (holidayType === 'meb') {
+                dayClass += ` bg-indigo-500 text-white font-bold border-2 border-indigo-500 shadow-md shadow-indigo-500/40 z-10 hover:scale-110 hover:z-20 cursor-help`;
+            } else {
+                dayClass += ` bg-sky-500 text-white font-bold border-2 border-sky-500 shadow-md shadow-sky-500/40 z-10 hover:scale-110 hover:z-20 cursor-help`;
+            }
         } else if (isToday) {
             dayClass += " bg-slate-200 dark:bg-slate-700 font-bold border-2 border-transparent";
         } else {
@@ -899,6 +907,8 @@ filterPastToggle.addEventListener('change', (e) => {
 const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
 
 window.addEventListener('scroll', () => {
+    if (!scrollToTopBtn) return;
+
     // Sayfa 300px'den fazla aşağı kaydırıldıysa butonu göster
     if (window.scrollY > 300) {
         scrollToTopBtn.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
@@ -909,9 +919,11 @@ window.addEventListener('scroll', () => {
     }
 }, { passive: true }); // Kaydırma performansını engellememesi için eklendi
 
-scrollToTopBtn.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-});
+if (scrollToTopBtn) {
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
 
 // Takvim / Liste Görünümü Buton Kontrolleri
 const viewListBtn = document.getElementById('view-list-btn');
@@ -955,11 +967,25 @@ if (db) {
     onSnapshot(doc(db, "site_settings", "announcement"), (docSnap) => {
         const banner = document.getElementById('announcement-banner');
         const textDisplay = document.getElementById('announcement-text-display');
+        const badgeBg = document.getElementById('announcement-badge-bg');
+        const title = document.getElementById('announcement-title');
+        
         if (banner && textDisplay && docSnap.exists()) {
             const data = docSnap.data();
             if (data.isActive && data.text) {
                 // Yazının akıcı dönmesi için araya boşluklar koyarak metni çoğaltıyoruz
                 textDisplay.textContent = `${data.text} \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0 ${data.text}`;
+                
+                if (data.isWinterMode) {
+                    banner.className = "bg-gradient-to-r from-rose-600 to-red-600 text-white overflow-hidden relative shadow-md";
+                    if (badgeBg) badgeBg.className = "flex items-center gap-1.5 font-bold text-xs sm:text-sm shrink-0 z-20 bg-gradient-to-r from-rose-600 to-red-600 pr-3 drop-shadow-sm uppercase tracking-wider transition-colors duration-300";
+                    if (title) title.textContent = "KAR ALARMI";
+                } else {
+                    banner.className = "bg-gradient-to-r from-amber-500 to-orange-500 text-white overflow-hidden relative shadow-md";
+                    if (badgeBg) badgeBg.className = "flex items-center gap-1.5 font-bold text-xs sm:text-sm shrink-0 z-20 bg-gradient-to-r from-amber-500 to-orange-500 pr-3 drop-shadow-sm uppercase tracking-wider transition-colors duration-300";
+                    if (title) title.textContent = "SON DAKİKA";
+                }
+
                 banner.classList.remove('hidden');
             } else {
                 banner.classList.add('hidden');
@@ -1032,7 +1058,8 @@ function renderSiteNotifications() {
                     <h4 class="font-bold text-slate-800 dark:text-slate-200 text-sm leading-tight">${data.title}</h4>
                     <span class="text-[10px] text-slate-400 whitespace-nowrap shrink-0">${data.dateStr}</span>
                 </div>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">${data.body}</p>
+                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3 mb-2">${data.body}</p>
+                ${data.senderName ? `<div class="flex items-center gap-1.5 text-[10px] text-indigo-500/80 dark:text-indigo-400/80 font-medium"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> <span>Gönderen: ${data.senderName}</span></div>` : ''}
             </div>
         `;
     });
@@ -1200,6 +1227,13 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// Kopyalama, Kesme, Yapıştırma ve Sürükleme Engelleme (Sadece manuel yazmaya izin ver)
+document.addEventListener('copy', (e) => e.preventDefault());
+document.addEventListener('cut', (e) => e.preventDefault());
+document.addEventListener('paste', (e) => e.preventDefault());
+document.addEventListener('dragstart', (e) => e.preventDefault());
+document.addEventListener('drop', (e) => e.preventDefault());
+
 // --- UYGULAMAYI İNDİR (PWA KURULUM) MANTIĞI ---
 const installAppBtn = document.getElementById('install-app-btn');
 
@@ -1228,6 +1262,8 @@ function initPushNotifications(swRegistration) {
     const banner = document.getElementById('push-notification-banner');
     const enableBtn = document.getElementById('enable-push-btn');
     const dismissBtn = document.getElementById('dismiss-push-btn');
+
+    if (!banner) return; // Banner elementi HTML'de yoksa hata vermemesi için işlemi durdur
 
     // Eğer bildirim izni daha önce sorulmadıysa 4 saniye sonra afişi çıkar
     if (Notification.permission === 'default' && !localStorage.getItem('push-dismissed')) {
