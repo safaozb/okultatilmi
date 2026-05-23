@@ -1059,11 +1059,20 @@ if (exportExcelBtn) {
     exportExcelBtn.addEventListener('click', () => {
         try {
             // 1. Genel İstatistik Kartlarındaki Verileri Al
-            const totalHolidays = document.getElementById('stat-total')?.textContent.trim() || '0';
-            const upcomingHolidays = document.getElementById('stat-upcoming')?.textContent.trim() || '0';
-            const totalVisitors = document.getElementById('stat-total-visitors')?.textContent.trim().replace(/\./g, '') || '0';
-            const todayVisitors = document.getElementById('stat-today-visitors')?.textContent.trim().replace(/\./g, '') || '0';
-            const subscribers = document.getElementById('stat-subscribers')?.textContent.trim().replace(/\./g, '') || '0';
+            const statTotalEl = document.getElementById('stat-total');
+            const totalHolidays = statTotalEl ? statTotalEl.textContent.trim() : '0';
+            
+            const statUpcomingEl = document.getElementById('stat-upcoming');
+            const upcomingHolidays = statUpcomingEl ? statUpcomingEl.textContent.trim() : '0';
+            
+            const statTotalVisEl = document.getElementById('stat-total-visitors');
+            const totalVisitors = statTotalVisEl ? statTotalVisEl.textContent.trim().replace(/\./g, '') : '0';
+            
+            const statTodayVisEl = document.getElementById('stat-today-visitors');
+            const todayVisitors = statTodayVisEl ? statTodayVisEl.textContent.trim().replace(/\./g, '') : '0';
+            
+            const statSubEl = document.getElementById('stat-subscribers');
+            const subscribers = statSubEl ? statSubEl.textContent.trim().replace(/\./g, '') : '0';
 
             let csvContent = "--- GENEL ISTATISTIKLER ---\n";
             csvContent += `Toplam Tatil,${totalHolidays}\n`;
@@ -1604,7 +1613,7 @@ async function loadAdminWeather() {
         const results = Array.isArray(data) ? data : [data];
 
         weatherDataCache = adminCityCoords.map((city, index) => {
-            const currentData = results[index]?.current || {};
+            const currentData = (results[index] && results[index].current) ? results[index].current : {};
             const temp = currentData.temperature_2m !== undefined ? Math.round(currentData.temperature_2m) : null;
             const code = currentData.weather_code !== undefined ? currentData.weather_code : -1;
             const info = getAdminWeatherInfo(code);

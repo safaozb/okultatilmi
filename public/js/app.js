@@ -940,27 +940,34 @@ function updateViewButtons() {
     }
 }
 
-viewListBtn?.addEventListener('click', () => { currentView = 'list'; localStorage.setItem('calendar-view', 'list'); updateViewButtons(); updateDOM(); });
-viewCalendarBtn?.addEventListener('click', () => { currentView = 'calendar'; localStorage.setItem('calendar-view', 'calendar'); updateViewButtons(); updateDOM(); });
+if (viewListBtn) viewListBtn.addEventListener('click', () => { currentView = 'list'; localStorage.setItem('calendar-view', 'list'); updateViewButtons(); updateDOM(); });
+if (viewCalendarBtn) viewCalendarBtn.addEventListener('click', () => { currentView = 'calendar'; localStorage.setItem('calendar-view', 'calendar'); updateViewButtons(); updateDOM(); });
 updateViewButtons();
 
 // Takvim İleri / Geri Butonları Olayları
-document.getElementById('prev-month-btn')?.addEventListener('click', () => {
-    currentMonth--;
-    if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-    }
-    renderCalendar();
-});
-document.getElementById('next-month-btn')?.addEventListener('click', () => {
-    currentMonth++;
-    if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-    }
-    renderCalendar();
-});
+const prevMonthBtn = document.getElementById('prev-month-btn');
+if (prevMonthBtn) {
+    prevMonthBtn.addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar();
+    });
+}
+
+const nextMonthBtn = document.getElementById('next-month-btn');
+if (nextMonthBtn) {
+    nextMonthBtn.addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderCalendar();
+    });
+}
 
 // --- CANLI DUYURU BANDI (MARQUEE) DİNLEYİCİSİ ---
 if (db) {
@@ -1111,12 +1118,16 @@ if (db) {
                 setTimeout(() => notifDropdown.classList.add("hidden"), 150);
             }
         });
-        document.getElementById("mark-read-btn")?.addEventListener("click", () => {
-            localStorage.setItem('last-read-notification', new Date().getTime().toString());
-            document.getElementById("notification-badge").classList.add("hidden");
-            const unreadBorders = document.querySelectorAll('.border-l-indigo-500');
-            unreadBorders.forEach(el => el.classList.remove('border-l-2', 'border-l-indigo-500'));
-        });
+        
+        const markReadBtn = document.getElementById("mark-read-btn");
+        if (markReadBtn) {
+            markReadBtn.addEventListener("click", () => {
+                localStorage.setItem('last-read-notification', new Date().getTime().toString());
+                document.getElementById("notification-badge").classList.add("hidden");
+                const unreadBorders = document.querySelectorAll('.border-l-indigo-500');
+                unreadBorders.forEach(el => el.classList.remove('border-l-2', 'border-l-indigo-500'));
+            });
+        }
     }
 }
 
@@ -1274,13 +1285,16 @@ function initPushNotifications(swRegistration) {
         }, 4000);
     }
 
-    dismissBtn?.addEventListener('click', () => {
-        banner.classList.add('translate-y-[150%]', 'opacity-0');
-        setTimeout(() => banner.classList.add('hidden'), 500);
-        localStorage.setItem('push-dismissed', 'true');
-    });
+    if (dismissBtn) {
+        dismissBtn.addEventListener('click', () => {
+            banner.classList.add('translate-y-[150%]', 'opacity-0');
+            setTimeout(() => banner.classList.add('hidden'), 500);
+            localStorage.setItem('push-dismissed', 'true');
+        });
+    }
 
-    enableBtn?.addEventListener('click', async () => {
+    if (enableBtn) {
+        enableBtn.addEventListener('click', async () => {
         const originalText = enableBtn.textContent;
         enableBtn.disabled = true;
         enableBtn.textContent = "Lütfen Bekleyin...";
@@ -1301,6 +1315,7 @@ function initPushNotifications(swRegistration) {
             enableBtn.textContent = originalText;
         }
     });
+    }
 
     // Site açıkken bildirim gelirse uygulama içinde uyarı olarak göster
     onMessage(messaging, (payload) => {

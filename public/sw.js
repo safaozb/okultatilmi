@@ -19,13 +19,23 @@ self.addEventListener('activate', event => {
 
 // Fetch olayında cache kullanma, istekleri doğrudan ağa bırak
 self.addEventListener('fetch', event => {
-    // Önbellek iptal edildi
+    // HTML sayfalarında tarayıcı cache'ini atlamak için no-store kullan
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request, { cache: 'no-store' }).catch(() => fetch(event.request))
+        );
+    }
 });
 
 // --- FIREBASE PUSH NOTIFICATION (Arka Plan Bildirimleri) ---
 // Firebase ayarlarını app.js üzerinden URL parametresi ile dinamik olarak çekiyoruz
 const urlParams = new URLSearchParams(location.search);
-const dynamicFirebaseConfig = Object.fromEntries(urlParams.entries());
+
+// Eski cihazlarda hata verdirmemesi için Object.fromEntries yerine döngü kullanılıyor
+const dynamicFirebaseConfig = {};
+for (const [key, value] of urlParams.entries()) {
+    dynamicFirebaseConfig[key] = value;
+}
 
 if (dynamicFirebaseConfig && dynamicFirebaseConfig.apiKey) {
     firebase.initializeApp(dynamicFirebaseConfig);
